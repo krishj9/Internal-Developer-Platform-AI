@@ -2,12 +2,14 @@
 Deployment catalog and destroy lifecycle API endpoints.
 """
 
+import json
 import uuid
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from api.app.api.schemas import DeploymentConfigResponse, DeploymentResponse, RequestResponse
 from api.app.auth.dependencies import get_current_user
+from api.app.core.settings import settings
 from api.app.domain.models import (
     AuditEventRecord,
     DeploymentStatus,
@@ -25,7 +27,11 @@ from api.app.repositories.platform_repositories import (
     get_request_repo,
 )
 from api.app.repositories.user_repository import UserRecord
-from api.app.services.github_dispatch_service import GitHubDispatchService, github_dispatcher
+from api.app.services.github_dispatch_service import (
+    GitHubDispatchError,
+    GitHubDispatchService,
+    github_dispatcher,
+)
 from api.app.services.idempotency_service import (
     IdempotencyMismatchError,
     IdempotencyService,
@@ -240,6 +246,20 @@ async def destroy_deployment(
 
     # 8. Dispatch destroy workflow
     workflow_file = f"deploy-{dep.template_id.split('-')[0]}.yml"
+    tpl_prefix = dep.template_id.split("-")[0]
+    pipeline_sa = (
+        f"idp-pipeline-{tpl_prefix}-prod@{settings.PROJECT_ID}.iam.gserviceaccount.com"
+        if dep.environment == "prod"
+        else f"idp-pipeline-{tpl_prefix}-dev@{settings.PROJECT_ID}.iam.gserviceaccount.com"
+    )
+    destroy_tf_vars = {
+        "project_id": settings.PROJECT_ID,
+        "deployment_id": deployment_id,
+        "agent_name": "destroy",
+        "environment": dep.environment,
+        "workspace": dep.workspace,
+        "owner": current_user.username,
+    }
     dispatch_inputs = {
         "request_id": request_id,
         "deployment_id": deployment_id,
@@ -249,19 +269,46 @@ async def destroy_deployment(
         "operation": "destroy",
         "workspace": dep.workspace,
         "environment": dep.environment,
-        "inputs_json": {},
-        "callback_url": "https://idp-api.internal/callbacks/pipeline",
-        "workload_identity_provider": (
-            "projects/123/locations/global/workloadIdentityPools/idp-pool"
-        ),
-        "service_account": "idp-pipeline-t1-dev@project.iam.gserviceaccount.com",
-        "state_bucket": "idp-tfstate-bucket",
+        "inputs_json": json.dumps(destroy_tf_vars),
+        "callback_url": f"{settings.API_BASE_URL}/callbacks/pipeline",
+        "workload_identity_provider": settings.WIF_PROVIDER_NAME,
+        "service_account": pipeline_sa,
+        "state_bucket": settings.STATE_BUCKET_NAME,
     }
-    await dispatcher.dispatch_workflow(
-        workflow_id=workflow_file,
-        ref=dep.template_commit_sha,
-        inputs=dispatch_inputs,
-    )
+    try:
+        await dispatcher.dispatch_workflow(
+            workflow_id=workflow_file,
+            ref=dep.template_commit_sha,
+            inputs=dispatch_inputs,
+        )
+    except GitHubDispatchError as e:
+        await requests.update_status(
+            request_id=request_id,
+            new_status=RequestStatus.FAILED,
+            failure_class="DISPATCH_FAILED",
+            safe_summary=f"Destroy workflow dispatch failed: {e!s}",
+        )
+        await deployments.release_lock(deployment_id, request_id)
+        dep.status = DeploymentStatus.ACTIVE
+        await deployments.save(dep)
+        await audits.append(
+            AuditEventRecord(
+                audit_event_id=f"aud-{uuid.uuid4().hex[:8]}",
+                actor_type="user",
+                actor_id=current_user.user_id,
+                action="submit_destroy_request_failed",
+                resource_type="deployment",
+                resource_id=deployment_id,
+                request_id=request_id,
+                deployment_id=deployment_id,
+                outcome="FAILURE",
+                safe_metadata={"error": str(e)},
+            )
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"GitHub destroy dispatch failed: {e!s}",
+        ) from e
 
     # 9. Update request status to DISPATCHED
     dispatched_req = await requests.update_status(request_id, RequestStatus.DISPATCHED)

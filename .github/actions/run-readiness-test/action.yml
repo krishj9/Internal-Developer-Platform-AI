@@ -17,6 +17,21 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working_directory }}
       run: |
-        echo "Executing readiness test: ${{ inputs.smoke_test_script }}..."
-        python3 "${{ inputs.smoke_test_script }}"
+        SCRIPT="${{ inputs.smoke_test_script }}"
+        echo "Executing readiness test: $SCRIPT..."
+        if [ -f "$SCRIPT" ]; then
+          python3 "$SCRIPT"
+        elif [ -n "$GITHUB_WORKSPACE" ] && [ -f "$GITHUB_WORKSPACE/$SCRIPT" ]; then
+          python3 "$GITHUB_WORKSPACE/$SCRIPT"
+        else
+          # Fallback: search by filename in current working directory
+          BASE_NAME=$(basename "$SCRIPT")
+          TARGET_FILE=$(find . -name "$BASE_NAME" | head -n 1)
+          if [ -n "$TARGET_FILE" ]; then
+            python3 "$TARGET_FILE"
+          else
+            echo "Error: Smoke test script not found: $SCRIPT" >&2
+            exit 1
+          fi
+        fi
         echo "Readiness test completed successfully."

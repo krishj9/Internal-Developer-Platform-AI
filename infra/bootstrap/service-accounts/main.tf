@@ -56,3 +56,17 @@ resource "google_project_iam_member" "pipeline_t1_logging" {
   role    = "roles/logging.logWriter"
   member  = "serviceAccount:${google_service_account.pipeline_t1_dev.email}"
 }
+
+# Service account admin for provisioning dedicated workload runtime identities
+resource "google_project_iam_member" "pipeline_t1_sa_admin" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountAdmin"
+  member  = "serviceAccount:${google_service_account.pipeline_t1_dev.email}"
+}
+
+# Project IAM admin for binding runtime permissions to the workload service account
+resource "google_project_iam_member" "pipeline_t1_iam_admin" {
+  project = var.project_id
+  role    = "roles/resourcemanager.projectIamAdmin"
+  member  = "serviceAccount:${google_service_account.pipeline_t1_dev.email}"
+}

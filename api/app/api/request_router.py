@@ -2,12 +2,14 @@
 Request lifecycle API endpoints: Submit request, check status.
 """
 
+import json
 import uuid
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from api.app.api.schemas import CreateRequestInput, RequestResponse
 from api.app.auth.dependencies import get_current_user
+from api.app.core.settings import settings
 from api.app.domain.models import (
     AuditEventRecord,
     DeploymentRecord,
@@ -27,7 +29,11 @@ from api.app.repositories.platform_repositories import (
     get_template_repo,
 )
 from api.app.repositories.user_repository import UserRecord
-from api.app.services.github_dispatch_service import GitHubDispatchService, github_dispatcher
+from api.app.services.github_dispatch_service import (
+    GitHubDispatchError,
+    GitHubDispatchService,
+    github_dispatcher,
+)
 from api.app.services.idempotency_service import (
     IdempotencyMismatchError,
     IdempotencyService,
@@ -166,10 +172,18 @@ async def create_request(
     workflow_file = f"deploy-{template.template_id.split('-')[0]}.yml"
     tpl_prefix = template.template_id.split("-")[0]
     pipeline_sa = (
-        f"idp-pipeline-{tpl_prefix}-prod@project.iam.gserviceaccount.com"
+        f"idp-pipeline-{tpl_prefix}-prod@{settings.PROJECT_ID}.iam.gserviceaccount.com"
         if input_data.environment == "prod"
-        else f"idp-pipeline-{tpl_prefix}-dev@project.iam.gserviceaccount.com"
+        else f"idp-pipeline-{tpl_prefix}-dev@{settings.PROJECT_ID}.iam.gserviceaccount.com"
     )
+    tf_vars = {
+        "project_id": settings.PROJECT_ID,
+        "deployment_id": deployment_id,
+        "environment": input_data.environment,
+        "workspace": input_data.workspace,
+        "owner": current_user.username,
+        **input_data.inputs,
+    }
     dispatch_inputs = {
         "request_id": request_id,
         "deployment_id": deployment_id,
@@ -179,19 +193,46 @@ async def create_request(
         "operation": "create",
         "workspace": input_data.workspace,
         "environment": input_data.environment,
-        "inputs_json": input_data.inputs,
-        "callback_url": "https://idp-api.internal/callbacks/pipeline",
-        "workload_identity_provider": (
-            "projects/123/locations/global/workloadIdentityPools/idp-pool"
-        ),
+        "inputs_json": json.dumps(tf_vars),
+        "callback_url": f"{settings.API_BASE_URL}/callbacks/pipeline",
+        "workload_identity_provider": settings.WIF_PROVIDER_NAME,
         "service_account": pipeline_sa,
-        "state_bucket": "idp-tfstate-bucket",
+        "state_bucket": settings.STATE_BUCKET_NAME,
     }
-    await dispatcher.dispatch_workflow(
-        workflow_id=workflow_file,
-        ref=template.template_commit_sha,
-        inputs=dispatch_inputs,
-    )
+    try:
+        await dispatcher.dispatch_workflow(
+            workflow_id=workflow_file,
+            ref=template.template_commit_sha,
+            inputs=dispatch_inputs,
+        )
+    except GitHubDispatchError as e:
+        await requests.update_status(
+            request_id=request_id,
+            new_status=RequestStatus.FAILED,
+            failure_class="DISPATCH_FAILED",
+            safe_summary=f"Workflow dispatch failed: {e!s}",
+        )
+        await deployments.release_lock(deployment_id, request_id)
+        deployment.status = DeploymentStatus.FAILED
+        await deployments.save(deployment)
+        await audits.append(
+            AuditEventRecord(
+                audit_event_id=f"aud-{uuid.uuid4().hex[:8]}",
+                actor_type="user",
+                actor_id=current_user.user_id,
+                action="submit_create_request_failed",
+                resource_type="request",
+                resource_id=request_id,
+                request_id=request_id,
+                deployment_id=deployment_id,
+                outcome="FAILURE",
+                safe_metadata={"error": str(e)},
+            )
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"GitHub workflow dispatch failed: {e!s}",
+        ) from e
 
     # 7. Update status to DISPATCHED
     dispatched_req = await requests.update_status(request_id, RequestStatus.DISPATCHED)

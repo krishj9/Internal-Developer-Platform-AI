@@ -42,9 +42,22 @@ class Settings(BaseSettings):
     # Secret Manager Secret IDs
     SECRET_ID_JWT_SIGNING_KEY: str = "idp-jwt-signing-key"
     SECRET_ID_GITHUB_DISPATCH_TOKEN: str = "idp-github-dispatch-token"
-    USE_SECRET_MANAGER: bool = False
+    # GitHub Integration
+    GITHUB_OWNER: str = "krishj9"
+    GITHUB_REPO: str = "Internal-Developer-Platform-AI"
+    GITHUB_DISPATCH_TOKEN: str = ""
 
-    # Firestore Database Configuration
+    # Platform Infrastructure Context
+    STATE_BUCKET_NAME: str = "idp-tfstate-mybrightday-dev"
+    WIF_PROVIDER_NAME: str = (
+        "projects/754915077075/locations/global/workloadIdentityPools/"
+        "idp-github-pool/providers/idp-github-provider"
+    )
+    PIPELINE_SA_EMAIL: str = "idp-pipeline-t1-dev@mybrightday-dev.iam.gserviceaccount.com"
+    API_BASE_URL: str = "https://idp-api-754915077075.us-central1.run.app"
+
+    # Cloud Controls
+    USE_SECRET_MANAGER: bool = False
     USE_FIRESTORE: bool = False
     FIRESTORE_DATABASE: str = "idp-db"
 
@@ -58,6 +71,8 @@ def load_secret_manager_secrets(cfg: Settings) -> None:
         from google.cloud import secretmanager
 
         client = secretmanager.SecretManagerServiceClient()
+
+        # 1. JWT Signing Key
         sec_name = (
             f"projects/{cfg.PROJECT_ID}/secrets/{cfg.SECRET_ID_JWT_SIGNING_KEY}/versions/latest"
         )
@@ -65,11 +80,19 @@ def load_secret_manager_secrets(cfg: Settings) -> None:
         secret_val = response.payload.data.decode("utf-8").strip()
         if secret_val:
             cfg.JWT_SECRET_KEY = secret_val
+
+        # 2. GitHub Dispatch Token
+        dispatch_sec = (
+            f"projects/{cfg.PROJECT_ID}/secrets/"
+            f"{cfg.SECRET_ID_GITHUB_DISPATCH_TOKEN}/versions/latest"
+        )
+        disp_resp = client.access_secret_version(request={"name": dispatch_sec})
+        disp_val = disp_resp.payload.data.decode("utf-8").strip()
+        if disp_val:
+            cfg.GITHUB_DISPATCH_TOKEN = disp_val
     except Exception as e:
-        # Fallback to local default with warning if running in non-GCP environment
         print(
-            f"Warning: Could not load secret '{cfg.SECRET_ID_JWT_SIGNING_KEY}' "
-            f"from Secret Manager: {e}"
+            f"Warning: Could not load secrets from Secret Manager: {e}"
         )
 
 
