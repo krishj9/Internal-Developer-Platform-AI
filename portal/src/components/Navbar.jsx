@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Layers, Server, Activity, ShieldCheck, LogOut, Terminal, CheckCircle2 } from 'lucide-react';
+import { Layers, Server, Activity, ShieldCheck, LogOut, Terminal, BookOpen, ExternalLink } from 'lucide-react';
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const { user, activeWorkspace, switchWorkspace, logout, isAdmin } = useAuth();
@@ -10,6 +10,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
     { id: 'deployments', label: 'Deployments', icon: Server },
     { id: 'requests', label: 'Requests', icon: Activity },
     { id: 'governance', label: 'Governance & Model Armor', icon: ShieldCheck },
+    { id: 'guide', label: 'User Guide', icon: BookOpen },
   ];
 
   return (
@@ -64,8 +65,33 @@ export default function Navbar({ activeTab, setActiveTab }) {
         </nav>
       </div>
 
-      {/* Right Controls: Workspace & Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      {/* Right Controls: Architecture Link, Workspace & Profile */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* Architecture Document Link */}
+        <a
+          id="nav-link-architecture"
+          href="/architecture.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-secondary"
+          style={{
+            padding: '6px 12px',
+            fontSize: '0.8rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            border: '1px solid rgba(59, 130, 246, 0.35)',
+            background: 'rgba(59, 130, 246, 0.1)',
+            color: '#93c5fd',
+            textDecoration: 'none',
+          }}
+          title="Open Technical Architecture Document"
+        >
+          <BookOpen size={14} color="#60a5fa" />
+          <span>Architecture.html</span>
+          <ExternalLink size={12} style={{ opacity: 0.6 }} />
+        </a>
+
         {/* Workspace Selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(15, 23, 42, 0.6)', padding: '4px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>WORKSPACE:</span>

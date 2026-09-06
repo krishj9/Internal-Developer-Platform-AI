@@ -7,6 +7,7 @@ import NewRequestModal from './components/NewRequestModal';
 import RequestTracker from './components/RequestTracker';
 import DeploymentsList from './components/DeploymentsList';
 import GovernanceDashboard from './components/GovernanceDashboard';
+import UserGuide from './components/UserGuide';
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -52,6 +53,9 @@ export default function App() {
         )}
         {activeTab === 'governance' && (
           <GovernanceDashboard />
+        )}
+        {activeTab === 'guide' && (
+          <UserGuide />
         )}
       </main>
 

@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IDP for Governed Agentic AI on GCP | Executive Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-space: #050813;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --border-card: rgba(255, 255, 255, 0.1);
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-amber: #f59e0b;
+      --accent-rose: #ef4444;
+      
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-sans: 'Inter', sans-serif;
+      --font-heading: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-space);
+      color: var(--text-white);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.12) 0px, transparent 50%);
+    }
+
+    /* Deck Layout */
+    .deck-container {
+      position: relative;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Top Status Bar */
+    .deck-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      z-index: 10;
+    }
+
+    .deck-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+    }
+
+    .deck-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Slide Stage */
+    .slide-stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 64px;
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      max-width: 1200px;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96) translateY(16px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+    }
+
+    /* Slide Typography */
+    .slide-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 20px;
+      width: fit-content;
+    }
+
+    .badge-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .badge-cyan { background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4); }
+    .badge-emerald { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-purple { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); }
+
+    .slide-title {
+      font-family: var(--font-heading);
+      font-size: 3.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #ffffff 40%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-lead {
+      font-size: 1.3rem;
+      color: var(--text-muted);
+      max-width: 850px;
+      margin-bottom: 36px;
+      line-height: 1.5;
+    }
+
+    /* Slide Cards & Grids */
+    .glass-box {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+    .stat-callout {
+      font-family: var(--font-heading);
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .stat-blue { color: var(--accent-cyan); }
+    .stat-emerald { color: var(--accent-emerald); }
+    .stat-purple { color: var(--accent-purple); }
+
+    /* Bottom Control Bar */
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 48px;
+      z-index: 10;
+    }
+
+    .progress-track {
+      flex: 1;
+      max-width: 400px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 0 24px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      width: 7%;
+      transition: width 0.3s ease;
+    }
+
+    .btn-nav {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-nav:hover:not(:disabled) {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-nav:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Speaker Notes Drawer */
+    .speaker-drawer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #090e1a;
+      border-top: 1px solid var(--accent-blue);
+      padding: 24px 48px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 100;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+    }
+
+    .speaker-drawer.open {
+      transform: translateY(0);
+    }
+
+    .speaker-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+    }
+
+    .speaker-text {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      color: #93c5fd;
+      background: rgba(59, 130, 246, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="deck-container">
+  <!-- Top Navigation & Branding -->
+  <header class="deck-topbar">
+    <div class="deck-logo">
+      <div class="logo-badge">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span>IDP Platform</span>
+    </div>
+
+    <div class="deck-status">
+      <span id="slide-indicator" style="font-weight: 600;">Slide 1 of 14</span>
+      <button class="btn-nav" id="btn-notes" onclick="toggleNotes()" style="padding: 6px 12px; font-size: 0.75rem;">
+        📝 Notes (S)
+      </button>
+      <button class="btn-nav" id="btn-fullscreen" onclick="toggleFullScreen()" style="padding: 6px 12px; font-size: 0.75rem;">
+        ⛶ Fullscreen (F)
+      </button>
+    </div>
+  </header>
+
+  <!-- Slide Stage -->
+  <div class="slide-stage">
+
+    <!-- SLIDE 1: Title -->
+    <div class="slide active" data-notes="Welcome executive stakeholders and engineering leadership. Today we present the Internal Developer Platform for Governed Agentic AI on Google Cloud Platform—a keyless, self-service control plane designed for enterprise scale.">
+      <div class="slide-badge badge-blue">Executive Architectural Briefing</div>
+      <h1 class="slide-title">Internal Developer Platform for Governed Agentic AI on GCP</h1>
+      <p class="slide-lead">
+        A secure, repeatable self-service control plane enabling enterprise engineering teams to provision, govern, and tear down AI workloads on Google Cloud.
+      </p>
+      <div class="grid-3" style="margin-top: 16px;">
+        <div class="glass-box">
+          <div class="stat-callout stat-blue">Zero</div>
+          <div style="font-weight: 600; font-size: 1rem; margin-bottom: 4px;">Static JSON Keys</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">100% keyless machine identity via GitHub Actions OIDC + GCP WIF.</p>
+        </div>
+        <div class="glass-box">
+          <div class="stat-callout stat-emerald">4 Governed</div>
+          <div style="font-weight: 600; font-size: 1rem; margin-bottom: 4px;">AI Templates (T1-T4)</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Vertex AI Agent Engine, Managed RAG, Cloud Run, and Model Armor.</p>
+        </div>
+        <div class="glass-box">
+          <div class="stat-callout stat-purple">100%</div>
+          <div style="font-weight: 600; font-size: 1rem; margin-bottom: 4px;">Automated Quality Gates</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">74 passing unit/integration tests with monotonic callback ledgers.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Problem Statement -->
+    <div class="slide" data-notes="Explain the industry context. Enterprise developers are rapidly experimenting with agentic AI, leading to Shadow AI, service account key leaks, runaway costs, and non-reproducible environments.">
+      <div class="slide-badge badge-cyan">The Enterprise Challenge</div>
+      <h2 class="slide-title">The Wild West of Agentic AI Infrastructure</h2>
+      <p class="slide-lead">
+        Without a dedicated platform engineering control plane, AI development teams face systemic operational and security friction:
+      </p>
+      <div class="grid-2">
+        <div class="glass-box">
+          <h3 style="color: var(--accent-rose); font-size: 1.25rem; margin-bottom: 12px;">❌ Ungoverned Ad-Hoc AI Stacks</h3>
+          <ul style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.8; margin-left: 20px;">
+            <li>Static GCP service account JSON keys committed to git repositories.</li>
+            <li>Direct data plane exposure with unmanaged public ingress.</li>
+            <li>Runaway cloud costs with no TTL expiration or orphan resource tracking.</li>
+            <li>Prompt injection, jailbreak vulnerabilities, and unredacted PII leakage.</li>
+          </ul>
+        </div>
+        <div class="glass-box">
+          <h3 style="color: var(--accent-emerald); font-size: 1.25rem; margin-bottom: 12px;">✅ The Governed IDP Solution</h3>
+          <ul style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.8; margin-left: 20px;">
+            <li>Self-service catalog with version-pinned, immutable AI templates.</li>
+            <li>Asynchronous control plane with atomic concurrency locking.</li>
+            <li>Pre-activation readiness smoke tests verifying AI response fidelity.</li>
+            <li>Integrated Model Armor guardrails and automated TTL lifecycle cleanup.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Architectural Separation -->
+    <div class="slide" data-notes="Emphasize our core architectural principle: The Control Plane is not the Execution Environment. Direct Terraform execution in the API is strictly prohibited.">
+      <div class="slide-badge badge-blue">Architectural Philosophy</div>
+      <h2 class="slide-title">Strict Separation of Architectural Planes</h2>
+      <p class="slide-lead">
+        Separating management control from cloud provisioning ensures resilience, least privilege, and horizontal scalability.
+      </p>
+      <div class="grid-3">
+        <div class="glass-box">
+          <h3 style="color: var(--accent-blue); font-size: 1.2rem; margin-bottom: 10px;">1. Control Plane</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;"><strong>FastAPI on Cloud Run</strong></p>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-left: 18px;">
+            <li>User authentication &amp; session tokens</li>
+            <li>24h TTL idempotency checking</li>
+            <li>Atomic deployment locks</li>
+            <li>Append-only audit &amp; callback ledgers</li>
+            <li>Zero Terraform binary execution</li>
+          </ul>
+        </div>
+        <div class="glass-box">
+          <h3 style="color: var(--accent-purple); font-size: 1.2rem; margin-bottom: 10px;">2. Execution Plane</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;"><strong>GitHub Actions + WIF</strong></p>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-left: 18px;">
+            <li>Ephemeral runner checkout</li>
+            <li>OIDC authentication to GCP</li>
+            <li>Declarative Terraform plan/apply</li>
+            <li>Pre-activation smoke testing</li>
+            <li>Monotonic status callbacks</li>
+          </ul>
+        </div>
+        <div class="glass-box">
+          <h3 style="color: var(--accent-emerald); font-size: 1.2rem; margin-bottom: 10px;">3. Data Plane</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;"><strong>Governed Workloads</strong></p>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-left: 18px;">
+            <li>Vertex AI Agent Engine reasoning instances</li>
+            <li>RagManagedDb vector corpus</li>
+            <li>Cloud Run containerized services</li>
+            <li>Zero public ingress without auth</li>
+            <li>Dedicated runtime service accounts</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Zero Key Security & WIF -->
+    <div class="slide" data-notes="Detail the zero-key security model. Explain how Workload Identity Federation maps GitHub repository claims directly to scoped service accounts.">
+      <div class="slide-badge badge-emerald">Security Core</div>
+      <h2 class="slide-title">Zero-Static-Key Trust Architecture</h2>
+      <p class="slide-lead">
+        Eliminating the #1 cloud security vulnerability: No service account JSON keys are ever created, downloaded, or stored.
+      </p>
+      <div class="glass-box">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+          <div>
+            <h3 style="font-size: 1.2rem; margin-bottom: 4px;">GitHub Actions OIDC + GCP Workload Identity Federation</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Short-lived, cryptographic token exchange anchored to repository claims.</p>
+          </div>
+          <span class="badge-emerald" style="padding: 6px 14px; border-radius: 9999px; font-weight: 700; font-size: 0.75rem;">
+            WIF ACTIVE
+          </span>
+        </div>
+        <div class="grid-3" style="gap: 16px;">
+          <div style="background: rgba(0,0,0,0.3); padding: 18px; border-radius: 10px; border: 1px solid var(--border-card);">
+            <div style="font-weight: 700; color: #93c5fd; margin-bottom: 6px;">1. Claim Binding</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Trust policy validates GitHub organization, repository name, Git ref, and target environment claims.</p>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 18px; border-radius: 10px; border: 1px solid var(--border-card);">
+            <div style="font-weight: 700; color: #93c5fd; margin-bottom: 6px;">2. Least Privilege SA</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Runners impersonate dedicated pipeline service accounts scoped strictly to template prefixes.</p>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 18px; border-radius: 10px; border: 1px solid var(--border-card);">
+            <div style="font-weight: 700; color: #93c5fd; margin-bottom: 6px;">3. Secret Manager</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Dispatch PAT and JWT signing keys retrieved at runtime by API runtime SA via IAM credentials.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Control Plane Core -->
+    <div class="slide" data-notes="Discuss the FastAPI control plane implementation: Argon2id password hashing, 60-minute JWT bearer tokens, and session invalidation via token_version.">
+      <div class="slide-badge badge-blue">Control Plane</div>
+      <h2 class="slide-title">Enterprise Authentication &amp; Sessions</h2>
+      <p class="slide-lead">
+        Robust, standards-compliant identity management built for developer velocity and operational security.
+      </p>
+      <div class="grid-2">
+        <div class="glass-box">
+          <h3 style="font-size: 1.25rem; color: #60a5fa; margin-bottom: 12px;">Argon2id Cryptographic Hashes</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+            Enforces OWASP recommended memory-hard password verification to prevent offline dictionary and GPU brute-force attacks:
+          </p>
+          <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1;">
+            • Memory Cost: 65,536 KiB (64 MiB)<br>
+            • Time Cost: 3 iterations<br>
+            • Parallelism: 4 concurrent threads
+          </div>
+        </div>
+        <div class="glass-box">
+          <h3 style="font-size: 1.25rem; color: #c084fc; margin-bottom: 12px;">60-Minute JWT Bearer Tokens</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+            Stateless authentication with immediate revocation capabilities for incident response:
+          </p>
+          <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1;">
+            • Lifetime: Strict 3600 seconds (1 hour)<br>
+            • Secret Key: Google Secret Manager<br>
+            • Instant Revocation: User <code>token_version</code> increment
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: State Machine & Idempotency -->
+    <div class="slide" data-notes="Explain the state machine design, atomic concurrency locks on deployments, and 24-hour SHA-256 payload digest idempotency.">
+      <div class="slide-badge badge-purple">Reliability Engine</div>
+      <h2 class="slide-title">Concurrency Locking &amp; 24h Idempotency</h2>
+      <p class="slide-lead">
+        Eliminating race conditions, duplicate infrastructure orders, and out-of-order execution states.
+      </p>
+      <div class="grid-2">
+        <div class="glass-box">
+          <h3 style="font-size: 1.2rem; color: var(--accent-cyan); margin-bottom: 12px;">24h TTL SHA-256 Idempotency</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 14px;">
+            Every mutation endpoint requires an <code>Idempotency-Key</code> header.
+          </p>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; margin-left: 18px;">
+            <li>Exact payload replayed within 24 hours returns cached HTTP 202 response.</li>
+            <li>Modified payload with identical key returns HTTP 409 Conflict.</li>
+            <li>Prevents duplicate billing and multiple VM/model instances.</li>
+          </ul>
+        </div>
+        <div class="glass-box">
+          <h3 style="font-size: 1.2rem; color: var(--accent-emerald); margin-bottom: 12px;">Atomic Deployment Locking</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 14px;">
+            Active requests hold exclusive locks in Firestore:
+          </p>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; margin-left: 18px;">
+            <li>Deployments in <code>PENDING</code> or <code>PROVISIONING</code> reject concurrent updates.</li>
+            <li>Teardowns blocked until provisioning pipeline completes or fails.</li>
+            <li>Locks automatically released upon terminal callback receipt.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Template T1 -->
+    <div class="slide" data-notes="Deep-dive into Template 1: Vertex AI Agent Engine. Autonomous agent reasoning instances packaged with the Agent Development Kit (ADK).">
+      <div class="slide-badge badge-blue">Template Portfolio</div>
+      <h2 class="slide-title">T1 — Vertex AI Agent Engine</h2>
+      <p class="slide-lead">
+        Governed ADK-based autonomous agent instances running on Vertex AI reasoning engine infrastructure.
+      </p>
+      <div class="grid-2">
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; margin-bottom: 10px; color: #93c5fd;">Architecture &amp; Constraints</h3>
+          <ul style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.8; margin-left: 18px;">
+            <li><strong>Framework:</strong> Agent Development Kit (ADK) GovernedAgent runtime.</li>
+            <li><strong>Models:</strong> Strict whitelist: <code>gemini-2.5-flash</code>, <code>gemini-2.5-pro</code>.</li>
+            <li><strong>Regions:</strong> Pinned to approved regions: <code>us-central1</code>.</li>
+            <li><strong>Packaging:</strong> Version-pinned wheel artifacts uploaded to GCS.</li>
+          </ul>
+        </div>
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; margin-bottom: 10px; color: #34d399;">Pre-Activation Smoke Test</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+            A deployment is never marked <code>ACTIVE</code> based on Terraform exit codes alone. The pipeline executes <code>smoke_test.py</code>:
+          </p>
+          <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1; margin-top: 10px;">
+            1. Query agent with ping stimulus<br>
+            2. Verify JSON reasoning response<br>
+            3. Validate latency &lt; 5000ms<br>
+            4. Post SUCCEEDED callback only on pass
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Template T2 -->
+    <div class="slide" data-notes="Deep-dive into Template 2: Managed Vertex AI RAG Engine. Discuss bounded document ingestion limits and automated retrieval validation.">
+      <div class="slide-badge badge-emerald">Template Portfolio</div>
+      <h2 class="slide-title">T2 — Managed Vertex AI RAG Engine</h2>
+      <p class="slide-lead">
+        Managed vector databases backed by <code>RagManagedDb</code> for high-precision document retrieval.
+      </p>
+      <div class="grid-2">
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; margin-bottom: 10px; color: #34d399;">Corpus Specifications</h3>
+          <ul style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.8; margin-left: 18px;">
+            <li><strong>Vector Engine:</strong> Vertex AI RagManagedDb.</li>
+            <li><strong>Embeddings:</strong> <code>text-embedding-004</code> and <code>text-embedding-005</code>.</li>
+            <li><strong>Chunking:</strong> Governed 512-token chunks with 100-token overlap.</li>
+            <li><strong>Ingestion Limits:</strong> Bounded safety: &le;100 documents, &le;500 MB.</li>
+          </ul>
+        </div>
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; margin-bottom: 10px; color: #60a5fa;">Retrieval Readiness Gate</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+            Before activation, the pipeline executes an automated retrieval verification:
+          </p>
+          <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1; margin-top: 10px;">
+            1. Import smoke document into corpus<br>
+            2. Issue semantic search query<br>
+            3. Assert match score &gt; threshold<br>
+            4. Verify zero data plane leakage
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Template T3 -->
+    <div class="slide" data-notes="Deep-dive into Template 3: Cloud Run Agent Service. Containerized FastAPI runtime with IAM-only invocation and horizontal auto-scaling.">
+      <div class="slide-badge badge-purple">Template Portfolio</div>
+      <h2 class="slide-title">T3 — Containerized Cloud Run Agent</h2>
+      <p class="slide-lead">
+        Microservice agent architecture running on Cloud Run v2 with private IAM service authorization.
+      </p>
+      <div class="grid-2">
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; margin-bottom: 10px; color: #c084fc;">Runtime Container Design</h3>
+          <ul style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.8; margin-left: 18px;">
+            <li><strong>Framework:</strong> FastAPI service hosting ADK GovernedAgent instance.</li>
+            <li><strong>Compute:</strong> 1 vCPU, 512MiB memory, auto-scaling up to 3 instances.</li>
+            <li><strong>Security:</strong> Dedicated runtime SA (<code>sa-t3-...</code>); zero <code>allUsers</code>.</li>
+            <li><strong>Health Checks:</strong> Built-in <code>/healthz</code> probe endpoint.</li>
+          </ul>
+        </div>
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; margin-bottom: 10px; color: #93c5fd;">Readiness Smoke Test</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+            Container readiness verified via authenticated HTTP smoke test:
+          </p>
+          <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1; margin-top: 10px;">
+            1. Query Cloud Run v2 service URL<br>
+            2. Invoke <code>/query</code> endpoint with ping payload<br>
+            3. Verify HTTP 200 and valid reasoning response<br>
+            4. Transition deployment to ACTIVE
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Template T4 -->
+    <div class="slide" data-notes="Deep-dive into Template 4: Model Armor and Governance Controls. Explain the 4 screening points, 3 enforcement modes, Cloud Monitoring alerts, and TTL cleanup.">
+      <div class="slide-badge badge-cyan">Governance &amp; Guardrails</div>
+      <h2 class="slide-title">T4 — Model Armor &amp; Operational Controls</h2>
+      <p class="slide-lead">
+        Multi-layered prompt security, PII sanitization, metric alerting, and automated TTL cleanup.
+      </p>
+      <div class="grid-2">
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; margin-bottom: 10px; color: var(--accent-cyan);">Model Armor Guardrails</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+            Screens prompts, tool inputs, retrieved content, and model outputs:
+          </p>
+          <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.7;">
+            • <strong>BLOCK:</strong> Strict rejection of prompt injections &amp; jailbreaks.<br>
+            • <strong>REDACT:</strong> Automatic masking of SSNs, credit cards, and emails.<br>
+            • <strong>ALLOW_WITH_AUDIT:</strong> Permitted execution with security ledger logging.
+          </div>
+        </div>
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; margin-bottom: 10px; color: var(--accent-amber);">TTL &amp; Monitoring Controls</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+            Active cost control and observability:
+          </p>
+          <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.7;">
+            • <strong>Default 7-Day TTL:</strong> Development workloads expire automatically.<br>
+            • <strong>Admin Override:</strong> Auditable TTL extensions with reason tracking.<br>
+            • <strong>Automated Cleanup:</strong> Scheduled workflow destroys expired workloads.<br>
+            • <strong>Cloud Monitoring:</strong> Alert policies for error spikes and budget warnings.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Production Gate & Notifications -->
+    <div class="slide" data-notes="Explain the production approval gate. Dual-stage workflow where apply job targets GitHub Environment prod, requiring designated manual reviewer approvals.">
+      <div class="slide-badge badge-purple">Deployment Gating</div>
+      <h2 class="slide-title">Production Gate &amp; Notification Boundary</h2>
+      <p class="slide-lead">
+        Enterprise change control: Dual-stage workflows with mandatory reviewer approval and event notifications.
+      </p>
+      <div class="grid-2">
+        <div class="glass-box">
+          <h3 style="font-size: 1.2rem; color: #c084fc; margin-bottom: 12px;">GitHub Environment Approval Gate</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px;">
+            Workflows split into <code>plan</code> and <code>apply</code> stages:
+          </p>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; margin-left: 18px;">
+            <li>API validates role: Only <code>platform_admin</code> can target prod environment.</li>
+            <li>Job <code>plan</code> runs and saves plan summary.</li>
+            <li>Job <code>apply</code> holds execution until designated reviewers approve.</li>
+            <li>Prevents accidental or unauthorized changes to production infrastructure.</li>
+          </ul>
+        </div>
+        <div class="glass-box">
+          <h3 style="font-size: 1.2rem; color: #34d399; margin-bottom: 12px;">Pub/Sub Event Notification Boundary</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px;">
+            Decoupled event boundary for enterprise communications:
+          </p>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; margin-left: 18px;">
+            <li>Control Plane emits normalized lifecycle events across Pub/Sub boundary.</li>
+            <li>Notification service formats rich Slack BlockKit webhook cards.</li>
+            <li>Strict data scrubbing: Secrets, keys, and state files strictly excluded.</li>
+            <li>Instant alerting on provisioning successes, failures, and TTL teardowns.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: Developer Experience -->
+    <div class="slide" data-notes="Showcase the developer experience: The React Developer Portal with cybernetic dark aesthetic, schema-guided forms, live request progression, and Python CLI.">
+      <div class="slide-badge badge-blue">Developer Experience</div>
+      <h2 class="slide-title">React Developer Portal &amp; CLI Client</h2>
+      <p class="slide-lead">
+        Frictionless self-service: Beautiful web portal and terminal CLI tailored for engineering velocity.
+      </p>
+      <div class="grid-3">
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; color: #60a5fa; margin-bottom: 8px;">Template Catalog</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Visual cards detailing allowed models, versions, and cost tiers with one-click deployment modal.
+          </p>
+        </div>
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; color: #34d399; margin-bottom: 8px;">Live Request Tracker</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Visual 5-step lifecycle stepper auto-polling pipeline callbacks with execution telemetry.
+          </p>
+        </div>
+        <div class="glass-box">
+          <h3 style="font-size: 1.15rem; color: #c084fc; margin-bottom: 8px;">Model Armor &amp; CLI</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Interactive guardrail testing playground, two-factor destroy modals, and lightweight Python CLI.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: Testing & Quality Gates -->
+    <div class="slide" data-notes="Highlight our engineering rigor: 74 automated unit and integration tests passing with 100% ruff linting compliance and full test pyramid coverage.">
+      <div class="slide-badge badge-emerald">Quality Assurance</div>
+      <h2 class="slide-title">Rigorous Testing &amp; Quality Gates</h2>
+      <p class="slide-lead">
+        Comprehensive test pyramid ensuring reliability, cryptographic correctness, and zero regressions.
+      </p>
+      <div class="grid-4" style="margin-bottom: 24px;">
+        <div class="glass-box" style="text-align: center;">
+          <div class="stat-callout stat-emerald">74 / 74</div>
+          <div style="font-weight: 700; font-size: 0.9rem;">Tests Passed</div>
+        </div>
+        <div class="glass-box" style="text-align: center;">
+          <div class="stat-callout stat-blue">100%</div>
+          <div style="font-weight: 700; font-size: 0.9rem;">Ruff Lint Compliance</div>
+        </div>
+        <div class="glass-box" style="text-align: center;">
+          <div class="stat-callout stat-purple">89%</div>
+          <div style="font-weight: 700; font-size: 0.9rem;">Code Coverage</div>
+        </div>
+        <div class="glass-box" style="text-align: center;">
+          <div class="stat-callout stat-blue">Zero</div>
+          <div style="font-weight: 700; font-size: 0.9rem;">Static Keys / Warnings</div>
+        </div>
+      </div>
+      <div class="glass-box" style="padding: 20px 24px; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+        <span><strong>Coverage Scope:</strong> Auth, JWT, Idempotency, Locking, Callbacks, Dead-Letter Reconcile, T1-T4 Templates, CLI</span>
+        <code style="font-size: 0.8rem;">uv run ruff check . &amp;&amp; uv run pytest -v</code>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: Conclusion & Impact -->
+    <div class="slide" data-notes="Conclude the presentation. Summarize business value: Accelerated time-to-market, zero security compromises, automated cost governance, and full auditability.">
+      <div class="slide-badge badge-purple">Business Outcomes</div>
+      <h2 class="slide-title">Empowering Autonomous AI with Enterprise Control</h2>
+      <p class="slide-lead">
+        The IDP POC successfully proves that developer self-service and strict enterprise governance can coexist seamlessly.
+      </p>
+      <div class="grid-3">
+        <div class="glass-box">
+          <div class="stat-callout stat-blue">10x Speed</div>
+          <div style="font-weight: 700; margin-bottom: 6px;">Developer Velocity</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Self-service agent provisioning in minutes rather than weeks of ticket delays.</p>
+        </div>
+        <div class="glass-box">
+          <div class="stat-callout stat-emerald">Zero Risk</div>
+          <div style="font-weight: 700; margin-bottom: 6px;">Keyless Security</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Zero static keys, Model Armor guardrails, and role-based production gates.</p>
+        </div>
+        <div class="glass-box">
+          <div class="stat-callout stat-purple">100% Control</div>
+          <div style="font-weight: 700; margin-bottom: 6px;">Cost &amp; Compliance</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Automated TTL cleanup, Cloud Monitoring alerts, and append-only audit ledgers.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Controls & Progress Track -->
+  <footer class="deck-controls">
+    <button class="btn-nav" id="btn-prev" onclick="prevSlide()">
+      ◀ Previous
+    </button>
+
+    <div class="progress-track">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <button class="btn-nav" id="btn-next" onclick="nextSlide()">
+      Next ▶
+    </button>
+  </footer>
+
+  <!-- Speaker Notes Drawer (Toggled by 'S' or button) -->
+  <div class="speaker-drawer" id="speaker-drawer">
+    <div class="speaker-title">Speaker Notes (Press 'S' to close)</div>
+    <div class="speaker-text" id="speaker-notes-content">
+      Welcome executive stakeholders and engineering leadership. Today we present the Internal Developer Platform for Governed Agentic AI on Google Cloud Platform.
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  const progressBar = document.getElementById('progress-bar');
+  const slideIndicator = document.getElementById('slide-indicator');
+  const speakerContent = document.getElementById('speaker-notes-content');
+  const speakerDrawer = document.getElementById('speaker-drawer');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+
+  function updateSlide(index) {
+    slides.forEach((s, idx) => {
+      s.classList.toggle('active', idx === index);
+    });
+    currentSlide = index;
+
+    // Update Progress Bar
+    const pct = ((index + 1) / totalSlides) * 100;
+    progressBar.style.width = `${pct}%`;
+
+    // Update Slide Indicator
+    slideIndicator.textContent = `Slide ${index + 1} of ${totalSlides}`;
+
+    // Update Speaker Notes
+    const notes = slides[index].getAttribute('data-notes') || 'No speaker notes for this slide.';
+    speakerContent.textContent = notes;
+
+    // Update Button Disabled States
+    btnPrev.disabled = index === 0;
+    btnNext.disabled = index === totalSlides - 1;
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+      updateSlide(currentSlide + 1);
+    }
+  }
+
+  function prevSlide() {
+    if (currentSlide > 0) {
+      updateSlide(currentSlide - 1);
+    }
+  }
+
+  function toggleNotes() {
+    speakerDrawer.classList.toggle('open');
+  }
+
+  function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }
+
+  // Keyboard navigation
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      e.preventDefault();
+      nextSlide();
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      prevSlide();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      updateSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      updateSlide(totalSlides - 1);
+    } else if (e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      toggleNotes();
+    } else if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      toggleFullScreen();
+    }
+  });
+
+  // Initialize
+  updateSlide(0);
+</script>
+
+</body>
+</html>
