@@ -16,7 +16,10 @@ from api.app.api.request_router import router as request_router
 from api.app.api.template_router import router as template_router
 from api.app.core.settings import settings
 from api.app.domain.models import TemplateRecord
-from api.app.repositories.platform_repositories import init_firestore_repositories, template_repo
+from api.app.repositories.platform_repositories import (
+    get_template_repo,
+    init_firestore_repositories,
+)
 
 
 @asynccontextmanager
@@ -24,10 +27,12 @@ async def lifespan(app: FastAPI):
     if settings.USE_FIRESTORE:
         init_firestore_repositories(settings.PROJECT_ID, settings.FIRESTORE_DATABASE)
 
+    t_repo = get_template_repo()
+
     # Seed default T1 template if not already present
-    t1 = await template_repo.get("t1-agent-engine", "2.0.0")
+    t1 = await t_repo.get("t1-agent-engine", "2.0.0")
     if not t1:
-        await template_repo.save(
+        await t_repo.save(
             TemplateRecord(
                 template_id="t1-agent-engine",
                 template_version="2.0.0",
@@ -44,9 +49,9 @@ async def lifespan(app: FastAPI):
         )
 
     # Seed default T3 Cloud Run template if not already present
-    t3 = await template_repo.get("t3-cloud-run-agent", "2.0.0")
+    t3 = await t_repo.get("t3-cloud-run-agent", "2.0.0")
     if not t3:
-        await template_repo.save(
+        await t_repo.save(
             TemplateRecord(
                 template_id="t3-cloud-run-agent",
                 template_version="2.0.0",
@@ -63,9 +68,9 @@ async def lifespan(app: FastAPI):
         )
 
     # Seed default T2 Managed RAG template if not already present
-    t2 = await template_repo.get("t2-managed-rag", "2.0.0")
+    t2 = await t_repo.get("t2-managed-rag", "2.0.0")
     if not t2:
-        await template_repo.save(
+        await t_repo.save(
             TemplateRecord(
                 template_id="t2-managed-rag",
                 template_version="2.0.0",
@@ -82,9 +87,9 @@ async def lifespan(app: FastAPI):
         )
 
     # Seed default T4 Governance template if not already present
-    t4 = await template_repo.get("t4-governance", "2.0.0")
+    t4 = await t_repo.get("t4-governance", "2.0.0")
     if not t4:
-        await template_repo.save(
+        await t_repo.save(
             TemplateRecord(
                 template_id="t4-governance",
                 template_version="2.0.0",
