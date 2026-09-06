@@ -5,8 +5,9 @@ Pydantic API request and response schemas for templates, requests, and deploymen
 from datetime import datetime
 from typing import Any
 
-from api.app.domain.models import DeploymentStatus, RequestOperation, RequestStatus
 from pydantic import BaseModel, Field
+
+from api.app.domain.models import DeploymentStatus, RequestOperation, RequestStatus
 
 
 class CreateRequestInput(BaseModel):

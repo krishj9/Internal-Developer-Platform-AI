@@ -2,12 +2,13 @@
 Authentication API endpoints: Login and Me.
 """
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from api.app.auth.dependencies import get_current_user
 from api.app.auth.hasher import verify_password
 from api.app.auth.jwt import create_access_token
 from api.app.auth.models import LoginRequest, TokenResponse, UserResponse
 from api.app.repositories.user_repository import UserRecord, UserRepository, user_repo
-from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

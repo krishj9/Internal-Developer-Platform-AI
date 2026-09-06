@@ -5,6 +5,8 @@ Pipeline callback receiver endpoint for trusted GitHub Actions execution events.
 import uuid
 from datetime import UTC, datetime
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from api.app.api.callback_schemas import CallbackResponse, PipelineCallbackInput
 from api.app.auth.callback_auth import PipelineIdentity, get_pipeline_identity
 from api.app.domain.models import (
@@ -26,7 +28,6 @@ from api.app.repositories.platform_repositories import (
     request_repo,
 )
 from api.app.services.idempotency_service import compute_payload_digest
-from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter(prefix="/callbacks", tags=["Callbacks"])
 

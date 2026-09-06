@@ -1,7 +1,7 @@
 [project]
-name = "idp-control-plane"
+name = "idp-platform"
 version = "2.1.0"
-description = "Internal Developer Platform (IDP) FastAPI Control Plane for Governed Agentic-AI on GCP"
+description = "Internal Developer Platform (IDP) for Governed Agentic-AI on GCP"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -26,22 +26,18 @@ dev = [
     "ruff>=0.8.0",
 ]
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["tests"]
+testpaths = ["api/tests"]
 python_files = ["test_*.py"]
-pythonpath = ["..", "."]
+pythonpath = ["."]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = [".", ".."]
+src = ["."]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]

@@ -4,6 +4,9 @@ Main FastAPI application entrypoint for the IDP Control Plane.
 
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from api.app.api.admin_router import router as admin_router
 from api.app.api.auth_router import router as auth_router
 from api.app.api.callback_router import router as callback_router
@@ -13,8 +16,6 @@ from api.app.api.template_router import router as template_router
 from api.app.core.settings import settings
 from api.app.domain.models import TemplateRecord
 from api.app.repositories.platform_repositories import template_repo
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager

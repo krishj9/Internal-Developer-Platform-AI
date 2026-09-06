@@ -4,6 +4,8 @@ Deployment catalog and destroy lifecycle API endpoints.
 
 import uuid
 
+from fastapi import APIRouter, Depends, Header, HTTPException, status
+
 from api.app.api.schemas import DeploymentConfigResponse, DeploymentResponse, RequestResponse
 from api.app.auth.dependencies import get_current_user
 from api.app.domain.models import (
@@ -30,7 +32,6 @@ from api.app.services.idempotency_service import (
     compute_payload_digest,
     idempotency_service,
 )
-from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 router = APIRouter(prefix="/deployments", tags=["Deployments"])
 

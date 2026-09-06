@@ -3,6 +3,7 @@ Unit tests for Argon2id password hashing and verification.
 """
 
 import pytest
+
 from api.app.auth.hasher import hash_password, needs_rehash, verify_password
 
 

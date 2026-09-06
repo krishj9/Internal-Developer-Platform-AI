@@ -2,11 +2,12 @@
 Template API endpoints.
 """
 
+from fastapi import APIRouter, Depends
+
 from api.app.api.schemas import TemplateResponse
 from api.app.auth.dependencies import get_current_user
 from api.app.repositories.platform_repositories import TemplateRepository, template_repo
 from api.app.repositories.user_repository import UserRecord
-from fastapi import APIRouter, Depends
 
 router = APIRouter(prefix="/templates", tags=["Templates"])
 

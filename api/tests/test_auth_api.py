@@ -3,10 +3,11 @@ Integration tests for FastAPI Authentication endpoints (/auth/login, /auth/me, /
 """
 
 import pytest
+from httpx import ASGITransport, AsyncClient
+
 from api.app.auth.hasher import hash_password
 from api.app.main import app
 from api.app.repositories.user_repository import UserRecord, user_repo
-from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture(autouse=True)

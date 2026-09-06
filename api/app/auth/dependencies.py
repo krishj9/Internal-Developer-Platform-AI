@@ -2,11 +2,12 @@
 FastAPI dependencies for authentication, token validation, and current user retrieval.
 """
 
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 from api.app.auth.jwt import TokenExpiredError, TokenInvalidError, decode_access_token
 from api.app.auth.models import TokenPayload
 from api.app.repositories.user_repository import UserRecord, UserRepository, user_repo
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 security_scheme = HTTPBearer(auto_error=False)
 

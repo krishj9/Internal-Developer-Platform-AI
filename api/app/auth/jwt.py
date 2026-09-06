@@ -5,8 +5,6 @@ JWT creation, decoding, and validation primitives.
 from datetime import UTC, datetime, timedelta
 
 import jwt
-from api.app.auth.models import TokenPayload
-from api.app.core.settings import settings
 from jwt.exceptions import (
     DecodeError,
     ExpiredSignatureError,
@@ -15,6 +13,9 @@ from jwt.exceptions import (
     InvalidSignatureError,
     PyJWTError,
 )
+
+from api.app.auth.models import TokenPayload
+from api.app.core.settings import settings
 
 
 class JWTValidationError(Exception):

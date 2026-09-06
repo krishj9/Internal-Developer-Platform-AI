@@ -4,8 +4,9 @@ Schemas for pipeline callbacks and dead-letter reconciliation.
 
 from typing import Any
 
-from api.app.domain.models import RequestStatus
 from pydantic import BaseModel, Field
+
+from api.app.domain.models import RequestStatus
 
 
 class PipelineCallbackInput(BaseModel):

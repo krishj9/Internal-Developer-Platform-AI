@@ -3,12 +3,13 @@ Integration tests for Request and Deployment lifecycle API endpoints.
 """
 
 import pytest
+from httpx import ASGITransport, AsyncClient
+
 from api.app.auth.hasher import hash_password
 from api.app.domain.models import DeploymentStatus, RequestStatus, TemplateRecord
 from api.app.main import app
 from api.app.repositories.platform_repositories import deployment_repo, request_repo, template_repo
 from api.app.repositories.user_repository import UserRecord, user_repo
-from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture(autouse=True)

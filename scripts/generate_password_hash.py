@@ -51,9 +51,7 @@ def verify_password(hash_str: str, password: str) -> bool:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate Argon2id password hash for IDP users."
-    )
+    parser = argparse.ArgumentParser(description="Generate Argon2id password hash for IDP users.")
     parser.add_argument(
         "--password",
         "-p",

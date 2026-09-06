@@ -3,6 +3,7 @@ Unit tests for platform repositories and concurrency locking.
 """
 
 import pytest
+
 from api.app.domain.models import (
     AuditEventRecord,
     CallbackEventRecord,

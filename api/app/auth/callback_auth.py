@@ -3,9 +3,10 @@ Google Cloud OIDC ID token authentication for pipeline callbacks.
 """
 
 import jwt
-from api.app.core.settings import settings
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from api.app.core.settings import settings
 
 security_scheme = HTTPBearer(auto_error=False)
 

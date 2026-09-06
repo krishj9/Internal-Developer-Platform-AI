@@ -5,6 +5,9 @@ Administrative API endpoints: Dead-letter callback reconciliation.
 import uuid
 from typing import Any
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+
 from api.app.api.callback_schemas import PipelineCallbackInput, ReconcileResponse
 from api.app.auth.callback_auth import PipelineIdentity
 from api.app.auth.dependencies import get_current_user
@@ -20,8 +23,6 @@ from api.app.repositories.platform_repositories import (
     request_repo,
 )
 from api.app.repositories.user_repository import UserRecord
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
