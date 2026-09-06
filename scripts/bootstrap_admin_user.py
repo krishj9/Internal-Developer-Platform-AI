@@ -44,10 +44,16 @@ def create_admin_payload(username: str, email: str, password: str) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Bootstrap platform_admin user for IDP.")
-    parser.add_argument("--username", default="admin", help="Admin username (default: admin)")
+    parser = argparse.ArgumentParser(
+        description="Bootstrap platform_admin user for IDP."
+    )
+    parser.add_argument(
+        "--username", default="admin", help="Admin username (default: admin)"
+    )
     parser.add_argument("--email", default="admin@example.com", help="Admin email")
-    parser.add_argument("--password", help="Admin password (will prompt securely if omitted)")
+    parser.add_argument(
+        "--password", help="Admin password (will prompt securely if omitted)"
+    )
     parser.add_argument(
         "--save-firestore",
         action="store_true",

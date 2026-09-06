@@ -27,9 +27,7 @@ class PipelineCallbackInput(BaseModel):
     artifact_references: list[str] = Field(
         default_factory=list, description="Safe GCS artifact paths"
     )
-    outputs: dict[str, Any] = Field(
-        default_factory=dict, description="Non-sensitive output values"
-    )
+    outputs: dict[str, Any] = Field(default_factory=dict, description="Non-sensitive output values")
 
 
 class CallbackResponse(BaseModel):

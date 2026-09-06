@@ -21,9 +21,9 @@ from argon2.exceptions import (
 
 # Recommended Argon2id parameters (RFC 9106 / OWASP standard)
 ph = PasswordHasher(
-    time_cost=3,        # Iterations
+    time_cost=3,  # Iterations
     memory_cost=65536,  # 64 MiB
-    parallelism=4,      # 4 threads
+    parallelism=4,  # 4 threads
     hash_len=32,
     salt_len=16,
 )
@@ -40,12 +40,20 @@ def verify_password(hash_str: str, password: str) -> bool:
     """Verify a plaintext password against an Argon2id hash."""
     try:
         return ph.verify(hash_str, password)
-    except (VerifyMismatchError, VerificationError, InvalidHashError, ValueError, TypeError):
+    except (
+        VerifyMismatchError,
+        VerificationError,
+        InvalidHashError,
+        ValueError,
+        TypeError,
+    ):
         return False
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate Argon2id password hash for IDP users.")
+    parser = argparse.ArgumentParser(
+        description="Generate Argon2id password hash for IDP users."
+    )
     parser.add_argument(
         "--password",
         "-p",

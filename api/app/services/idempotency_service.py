@@ -13,6 +13,7 @@ from api.app.repositories.platform_repositories import IdempotencyRepository, id
 
 class IdempotencyMismatchError(Exception):
     """Raised when an existing idempotency key is reused with a different payload."""
+
     pass
 
 

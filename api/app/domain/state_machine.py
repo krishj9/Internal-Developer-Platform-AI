@@ -2,22 +2,24 @@
 State machine and lifecycle transition rules for Requests and Deployments.
 """
 
-
 from api.app.domain.models import DeploymentStatus, RequestStatus
 
 
 class InvalidStateTransitionError(Exception):
     """Raised when an illegal lifecycle state jump is attempted."""
+
     pass
 
 
 class TerminalStateError(InvalidStateTransitionError):
     """Raised when attempting to transition out of a terminal state."""
+
     pass
 
 
 class DeploymentLockedError(Exception):
     """Raised when a deployment already has an active, non-terminal lifecycle request."""
+
     pass
 
 

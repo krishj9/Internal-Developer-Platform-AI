@@ -127,6 +127,7 @@ class IdempotencyRepository(ABC):
 # In-Memory Thread-Safe Implementations (for fast testing & local execution)
 # ---------------------------------------------------------------------------
 
+
 class InMemoryTemplateRepository(TemplateRepository):
     def __init__(self):
         self._templates: dict[str, TemplateRecord] = {}
@@ -267,9 +268,7 @@ class InMemoryAuditEventRepository(AuditEventRepository):
             self._audits.append(event)
 
     async def list_by_workspace(self, workspace: str, limit: int = 50) -> list[AuditEventRecord]:
-        results = [
-            a for a in self._audits if a.safe_metadata.get("workspace") == workspace
-        ]
+        results = [a for a in self._audits if a.safe_metadata.get("workspace") == workspace]
         return sorted(results, key=lambda x: x.timestamp, reverse=True)[:limit]
 
 

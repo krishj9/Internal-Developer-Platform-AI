@@ -3,7 +3,7 @@ T1 Agent implementation using Google Cloud Agent Development Kit (ADK) / Vertex 
 """
 
 import os
-from typing import Dict, Any
+from typing import Any
 
 
 class GovernedAgent:
@@ -18,7 +18,7 @@ class GovernedAgent:
             "Respond helpfully and concisely."
         )
 
-    def query(self, prompt: str) -> Dict[str, Any]:
+    def query(self, prompt: str) -> dict[str, Any]:
         """
         Execute an agent reasoning query.
         """

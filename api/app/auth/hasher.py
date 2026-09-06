@@ -7,9 +7,9 @@ from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatc
 
 # Configure Argon2id hasher according to RFC 9106 / OWASP recommendations
 _hasher = PasswordHasher(
-    time_cost=3,        # 3 iterations
+    time_cost=3,  # 3 iterations
     memory_cost=65536,  # 64 MiB RAM
-    parallelism=4,      # 4 lanes / threads
+    parallelism=4,  # 4 lanes / threads
     hash_len=32,
     salt_len=16,
 )

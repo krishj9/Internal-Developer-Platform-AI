@@ -2,7 +2,6 @@
 Integration tests for FastAPI Authentication endpoints (/auth/login, /auth/me, /healthz).
 """
 
-
 import pytest
 from api.app.auth.hasher import hash_password
 from api.app.main import app

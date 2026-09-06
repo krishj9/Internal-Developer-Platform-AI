@@ -10,6 +10,7 @@ from api.app.core.settings import settings
 
 class GitHubDispatchError(Exception):
     """Raised when GitHub workflow dispatch fails."""
+
     pass
 
 
@@ -52,7 +53,7 @@ class GitHubDispatchService:
             "inputs": {k: str(v) if not isinstance(v, str) else v for k, v in inputs.items()},
         }
 
-        async with (client or httpx.AsyncClient()) as http_client:
+        async with client or httpx.AsyncClient() as http_client:
             try:
                 response = await http_client.post(url, json=payload, headers=headers, timeout=10.0)
                 if response.status_code != 204:

@@ -19,16 +19,19 @@ from jwt.exceptions import (
 
 class JWTValidationError(Exception):
     """Base exception for JWT validation failures."""
+
     pass
 
 
 class TokenExpiredError(JWTValidationError):
     """Token has passed its expiration time."""
+
     pass
 
 
 class TokenInvalidError(JWTValidationError):
     """Token signature, issuer, audience, or structure is invalid."""
+
     pass
 
 
@@ -81,8 +84,16 @@ def decode_access_token(
     key = secret_key or settings.JWT_SECRET_KEY
 
     required_claims = [
-        "sub", "username", "email", "role", "workspaces",
-        "token_version", "exp", "iat", "iss", "aud",
+        "sub",
+        "username",
+        "email",
+        "role",
+        "workspaces",
+        "token_version",
+        "exp",
+        "iat",
+        "iss",
+        "aud",
     ]
 
     try:

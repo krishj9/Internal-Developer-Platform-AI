@@ -76,18 +76,22 @@ async def reconcile_callbacks(
             )
             reconciled_count += 1
             reconciled_requests.append(event_input.request_id)
-            details.append({
-                "request_id": event_input.request_id,
-                "status": "RECONCILED",
-                "result": res.model_dump(),
-            })
+            details.append(
+                {
+                    "request_id": event_input.request_id,
+                    "status": "RECONCILED",
+                    "result": res.model_dump(),
+                }
+            )
         except Exception as e:
             failed_count += 1
-            details.append({
-                "request_id": event_input.request_id,
-                "status": "FAILED",
-                "error": str(e),
-            })
+            details.append(
+                {
+                    "request_id": event_input.request_id,
+                    "status": "FAILED",
+                    "error": str(e),
+                }
+            )
 
     # 3. Record Audit Log for Reconciliation
     await audits.append(
