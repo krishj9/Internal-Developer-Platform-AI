@@ -1,0 +1,110 @@
+id: t3-cloud-run-agent
+version: 2.0.0
+display_name: Agent on Cloud Run Service
+description: Governed containerized ADK-based agent service deployed to Google Cloud Run v2 with dedicated runtime identity and IAM invocation control.
+supported_environments:
+  - dev
+
+inputs:
+  type: object
+  additionalProperties: false
+  properties:
+    service_name:
+      type: string
+      pattern: "^[a-z0-9-]+$"
+      minLength: 3
+      maxLength: 30
+      description: Logical identifier for the Cloud Run agent service
+    model_name:
+      type: string
+      enum:
+        - gemini-2.5-flash
+        - gemini-2.5-pro
+      description: Approved foundational model for the agent
+    region:
+      type: string
+      enum:
+        - us-central1
+      description: Approved GCP region for deployment
+    cpu:
+      type: string
+      enum:
+        - "1"
+        - "2"
+      description: Bounded CPU allocation
+    memory:
+      type: string
+      enum:
+        - "512Mi"
+        - "1Gi"
+        - "2Gi"
+      description: Bounded memory allocation
+    max_instances:
+      type: integer
+      minimum: 1
+      maximum: 10
+      description: Maximum container instances for autoscaling
+    timeout_seconds:
+      type: integer
+      minimum: 30
+      maximum: 300
+      description: Request timeout in seconds
+    concurrency:
+      type: integer
+      minimum: 1
+      maximum: 80
+      description: Maximum concurrent requests per container instance
+    description:
+      type: string
+      maxLength: 100
+      description: Brief description of the agent capability
+  required:
+    - service_name
+    - model_name
+    - region
+
+defaults:
+  model_name: gemini-2.5-flash
+  region: us-central1
+  cpu: "1"
+  memory: "512Mi"
+  max_instances: 2
+  timeout_seconds: 60
+  concurrency: 80
+  description: Default Governed Cloud Run Agent Service
+
+constraints:
+  allowed_models:
+    - gemini-2.5-flash
+    - gemini-2.5-pro
+  allowed_regions:
+    - us-central1
+  resource_limits:
+    max_instances: 10
+    max_memory: "2Gi"
+    max_cpu: "2"
+  allowed_workspaces:
+    - default
+    - ws-dev
+
+cost_tier: medium
+
+readiness:
+  type: http_smoke_test
+  description: Authenticated HTTP GET /healthz and POST /query smoke check verifying container startup, health, and deterministic response structure.
+  smoke_script: service/smoke_test.py
+
+output_contract:
+  allowed_outputs:
+    - deployment_id
+    - service_name
+    - service_url
+    - runtime_sa_email
+    - model_name
+    - region
+    - status
+
+lifecycle:
+  supports_create: true
+  supports_destroy: true
+  retention_notes: Cloud Run v2 service, revisions, and dedicated runtime service account bindings are fully deleted on destroy.

@@ -38,6 +38,25 @@ async def lifespan(app: FastAPI):
                 status="published",
             )
         )
+
+    # Seed default T3 Cloud Run template if not already present
+    t3 = await template_repo.get("t3-cloud-run-agent", "2.0.0")
+    if not t3:
+        await template_repo.save(
+            TemplateRecord(
+                template_id="t3-cloud-run-agent",
+                template_version="2.0.0",
+                template_commit_sha="010078cf6745f44da605f6fa0768b4f177c385a5",
+                display_name="Agent on Cloud Run Service",
+                description="Governed ADK-based agent deployed to Google Cloud Run v2.",
+                supported_environments=["dev"],
+                allowed_models=["gemini-2.5-flash", "gemini-2.5-pro"],
+                allowed_regions=["us-central1"],
+                cost_tier="medium",
+                manifest={"readiness": {"type": "http_smoke_test"}},
+                status="published",
+            )
+        )
     yield
 
 

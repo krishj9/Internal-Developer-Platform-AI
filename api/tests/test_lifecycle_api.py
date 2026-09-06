@@ -52,7 +52,22 @@ async def seed_test_data():
         manifest={"readiness": {"type": "smoke_test"}},
         status="published",
     )
+    # Seed T3 template
+    t3 = TemplateRecord(
+        template_id="t3-cloud-run-agent",
+        template_version="2.0.0",
+        template_commit_sha="010078cf6745f44da605f6fa0768b4f177c385a5",
+        display_name="Agent on Cloud Run Service",
+        description="Governed ADK-based agent on Cloud Run v2.",
+        supported_environments=["dev"],
+        allowed_models=["gemini-2.5-flash", "gemini-2.5-pro"],
+        allowed_regions=["us-central1"],
+        cost_tier="medium",
+        manifest={"readiness": {"type": "http_smoke_test"}},
+        status="published",
+    )
     await template_repo.save(t1)
+    await template_repo.save(t3)
 
 
 async def get_auth_token(username: str = "alice", password: str = "ValidPassword123!") -> str:
@@ -237,3 +252,35 @@ async def test_get_deployment_and_destroy_flow():
         assert destroy_data["operation"] == "destroy"
         assert destroy_data["deployment_id"] == deployment_id
         assert destroy_data["status"] == "DISPATCHED"
+
+
+@pytest.mark.asyncio
+async def test_submit_t3_cloud_run_request():
+    token = await get_auth_token()
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Submit T3 request
+        t3_payload = {
+            "workspace": "ws-dev",
+            "template_id": "t3-cloud-run-agent",
+            "template_version": "2.0.0",
+            "environment": "dev",
+            "inputs": {
+                "service_name": "agent-runner",
+                "model_name": "gemini-2.5-flash",
+                "cpu": "1",
+                "memory": "512Mi",
+                "max_instances": 3,
+                "region": "us-central1",
+            },
+        }
+        res = await client.post(
+            "/requests",
+            json=t3_payload,
+            headers={"Authorization": f"Bearer {token}", "Idempotency-Key": "key-t3-001"},
+        )
+        assert res.status_code == 202
+        data = res.json()
+        assert data["template_id"] == "t3-cloud-run-agent"
+        assert data["status"] == "DISPATCHED"
+        assert data["workspace"] == "ws-dev"
