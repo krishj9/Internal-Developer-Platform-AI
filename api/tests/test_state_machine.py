@@ -3,7 +3,6 @@ Unit tests for Request and Deployment lifecycle state machine transitions.
 """
 
 import pytest
-
 from api.app.domain.models import DeploymentStatus, RequestStatus
 from api.app.domain.state_machine import (
     InvalidStateTransitionError,

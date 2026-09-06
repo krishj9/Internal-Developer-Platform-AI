@@ -3,8 +3,8 @@ Unit tests for the Idempotency service, hashing, and 24-hour TTL mechanics.
 """
 
 from datetime import UTC, datetime, timedelta
-import pytest
 
+import pytest
 from api.app.domain.models import IdempotencyRecord
 from api.app.repositories.platform_repositories import InMemoryIdempotencyRepository
 from api.app.services.idempotency_service import (
@@ -15,8 +15,14 @@ from api.app.services.idempotency_service import (
 
 
 def test_compute_payload_digest_determinism():
-    payload_a = {"template_id": "t1-agent-engine", "inputs": {"model": "gemini-2.5-flash", "region": "us-central1"}}
-    payload_b = {"inputs": {"region": "us-central1", "model": "gemini-2.5-flash"}, "template_id": "t1-agent-engine"}
+    payload_a = {
+        "template_id": "t1-agent-engine",
+        "inputs": {"model": "gemini-2.5-flash", "region": "us-central1"},
+    }
+    payload_b = {
+        "inputs": {"region": "us-central1", "model": "gemini-2.5-flash"},
+        "template_id": "t1-agent-engine",
+    }
 
     # Keys ordered differently must produce identical digests
     digest_a = compute_payload_digest(payload_a)
@@ -24,7 +30,10 @@ def test_compute_payload_digest_determinism():
     assert digest_a == digest_b
 
     # Modified payload must produce different digest
-    payload_c = {"template_id": "t1-agent-engine", "inputs": {"model": "gemini-2.5-pro", "region": "us-central1"}}
+    payload_c = {
+        "template_id": "t1-agent-engine",
+        "inputs": {"model": "gemini-2.5-pro", "region": "us-central1"},
+    }
     digest_c = compute_payload_digest(payload_c)
     assert digest_a != digest_c
 
