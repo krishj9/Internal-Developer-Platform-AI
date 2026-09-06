@@ -911,7 +911,7 @@ wheels = [
 [[package]]
 name = "idp-platform"
 version = "2.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "argon2-cffi" },
     { name = "email-validator" },
