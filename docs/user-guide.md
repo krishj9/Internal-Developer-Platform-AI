@@ -20,18 +20,16 @@ This platform provides an automated, self-service developer control plane to pro
 
 ## 2. Platform Roles & Authentication
 
-The platform authenticates callers via **Argon2id** password verification and issues **60-minute signed JWT bearer tokens** with claims backed by Google Secret Manager signing keys.
+The platform authenticates callers via **Argon2id** password verification and issues **cryptographically signed JWT bearer tokens** with claims backed by Google Secret Manager signing keys.
 
-### 2.1 Demo Test Accounts
+### 2.1 Role-Based Access Control (RBAC) Matrix
 
-| Username | Password | Role | Assigned Workspaces | Capabilities |
-|---|---|---|---|---|
-| `admin_gov` | `AdminPass123!` | `platform_admin` | `default`, `admin`, `ws-dev` | Full access: provision dev/prod, approve prod deployments, reconcile callbacks, TTL override |
-| `dev_gov` | `DevPass123!` | `developer` | `default`, `ws-dev` | Workspace access: provision dev workloads, track status, inspect safe outputs, trigger teardown |
-| `admin` | `AdminPass2026#` | `platform_admin` | `default`, `admin` | Platform administrative credentials |
+| Role | Typical Assignment | Capabilities |
+|---|---|---|
+| `platform_admin` | Platform Engineering & Operations | Full access: provision across environments (`dev` and `prod`), approve production gates, reconcile dead-letter callbacks, manage workload TTLs |
+| `developer` | Application Engineering Teams | Project-scoped access: provision development workloads within assigned workspaces, inspect safe operational outputs, initiate safe workload teardowns |
 
-> [!TIP]
-> On the Portal Login screen, you can click the **"👑 Platform Admin"** or **"💻 Developer"** fast-fill buttons to auto-populate credentials.
+Authentication credentials are provisioned out-of-band by Platform Operations and mapped to approved developer workspaces.
 
 ---
 
@@ -137,8 +135,8 @@ Developers can also operate the platform via the command-line interface `idp`.
 
 ### 4.1 Login & Profile
 ```bash
-# Login to obtain 60-minute JWT bearer token
-uv run python cli/main.py login --username admin_gov --password "AdminPass123!"
+# Login to obtain access token
+uv run python cli/main.py login --username <username> --password "<password>"
 
 # Verify current profile & permissions
 uv run python cli/main.py me

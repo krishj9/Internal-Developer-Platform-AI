@@ -442,7 +442,7 @@
     </div>
 
     <!-- SLIDE 5: Control Plane Core -->
-    <div class="slide" data-notes="Discuss the FastAPI control plane implementation: Argon2id password hashing, 60-minute JWT bearer tokens, and session invalidation via token_version.">
+    <div class="slide" data-notes="Discuss the FastAPI control plane implementation: Argon2id password hashing, cryptographically signed JWT bearer tokens, and session invalidation via token_version.">
       <div class="slide-badge badge-blue">Control Plane</div>
       <h2 class="slide-title">Enterprise Authentication &amp; Sessions</h2>
       <p class="slide-lead">
@@ -461,12 +461,12 @@
           </div>
         </div>
         <div class="glass-box">
-          <h3 style="font-size: 1.25rem; color: #c084fc; margin-bottom: 12px;">60-Minute JWT Bearer Tokens</h3>
+          <h3 style="font-size: 1.25rem; color: #c084fc; margin-bottom: 12px;">Signed JWT Bearer Tokens</h3>
           <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
             Stateless authentication with immediate revocation capabilities for incident response:
           </p>
           <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1;">
-            • Lifetime: Strict 3600 seconds (1 hour)<br>
+            • Expiration: Time-bounded signed sessions<br>
             • Secret Key: Google Secret Manager<br>
             • Instant Revocation: User <code>token_version</code> increment
           </div>

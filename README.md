@@ -15,7 +15,7 @@ A secure, repeatable, self-service Internal Developer Platform (IDP) control pla
 
 - **Control Plane Architecture**: Asynchronous FastAPI control plane running on Cloud Run backed by Firestore Native mode.
 - **Zero Static Service Account Keys**: 100% keyless machine authentication via GitHub Actions OIDC + GCP Workload Identity Federation (WIF).
-- **Argon2id + 60-Minute JWTs**: Secure user authentication with `token_version` revocation.
+- **Argon2id + Signed JWTs**: Secure user authentication with `token_version` revocation.
 - **24-Hour TTL Idempotency**: SHA-256 payload digest verification preventing duplicate or conflicting provisioning requests.
 - **Atomic Deployment Locking**: Concurrency safety preventing simultaneous mutations or premature teardowns.
 - **Parameter-Bound Pipeline Callbacks**: Strict OIDC ID token validation, monotonic sequence counters, and parameter context binding.
@@ -77,8 +77,8 @@ npm run dev
 
 ### 3. IDP CLI
 ```bash
-# Login using demo platform admin credentials
-idp login -u admin_gov -p AdminPass123! --url http://localhost:8000
+# Login using credentials
+idp login -u <username> -p <password> --url http://localhost:8000
 
 # Discover templates
 idp templates list

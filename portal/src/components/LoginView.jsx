@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, Lock, User, KeyRound, Sparkles, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Lock, User, AlertCircle } from 'lucide-react';
 
 export default function LoginView() {
   const { login } = useAuth();
-  const [username, setUsername] = useState('admin_gov');
-  const [password, setPassword] = useState('AdminPass123!');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -20,12 +20,6 @@ export default function LoginView() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoFill = (u, p) => {
-    setUsername(u);
-    setPassword(p);
-    setError('');
   };
 
   return (
@@ -96,35 +90,8 @@ export default function LoginView() {
             {loading ? 'Authenticating...' : 'Sign In to Control Plane'}
           </button>
         </form>
-
-        {/* Demo Fast Presets */}
-        <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '10px' }}>
-            <Sparkles size={14} color="#60a5fa" />
-            <span>DEMO TEST PRESETS (Argon2id + 60m JWT)</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <button
-              type="button"
-              id="btn-preset-admin"
-              className="btn btn-secondary"
-              style={{ fontSize: '0.75rem', padding: '6px 10px' }}
-              onClick={() => handleDemoFill('admin_gov', 'AdminPass123!')}
-            >
-              👑 Platform Admin
-            </button>
-            <button
-              type="button"
-              id="btn-preset-dev"
-              className="btn btn-secondary"
-              style={{ fontSize: '0.75rem', padding: '6px 10px' }}
-              onClick={() => handleDemoFill('dev_gov', 'DevPass123!')}
-            >
-              💻 Developer
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
+

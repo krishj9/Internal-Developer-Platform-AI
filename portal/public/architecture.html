@@ -641,8 +641,8 @@ attribute.environment=assertion.environment"</code></pre>
           </ul>
         </div>
         <div class="glass-card">
-          <h3>60-Minute JWT Bearer Tokens</h3>
-          <p>Upon login via <code>POST /auth/login</code>, a JWT is generated with a strict 3600-second expiration:</p>
+          <h3>Signed JWT Bearer Tokens</h3>
+          <p>Upon login via <code>POST /auth/login</code>, a cryptographically signed, time-bounded JWT is issued:</p>
           <ul>
             <li>Signing Secret: Google Secret Manager (<code>idp-jwt-signing-key</code>)</li>
             <li>Token Version Revocation: Global or per-user revocation via <code>token_version</code> increment</li>

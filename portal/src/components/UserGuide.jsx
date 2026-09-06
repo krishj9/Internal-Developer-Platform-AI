@@ -165,7 +165,7 @@ export default function UserGuide() {
                 <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>1. Quick Start & Role Permissions</h2>
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.6 }}>
-                The IDP Control Plane uses <strong>Argon2id password verification</strong> and issues <strong>60-minute signed JWT bearer tokens</strong>. Tokens are stored securely in browser <code>localStorage</code> and automatically included in all authenticated API requests.
+                The IDP Control Plane uses <strong>Argon2id password verification</strong> and issues <strong>cryptographically signed JWT bearer tokens</strong>. Tokens are stored securely in browser <code>localStorage</code> and automatically included in all authenticated API requests.
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '28px' }}>
@@ -175,7 +175,7 @@ export default function UserGuide() {
                   </div>
                   <div style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '6px' }}>Platform Administrator</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                    Demo user: <code style={{ color: '#93c5fd' }}>admin_gov</code> / <code style={{ color: '#93c5fd' }}>AdminPass123!</code>
+                    Identity: Enterprise admin assigned by Platform Operations
                   </div>
                   <ul style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <li>Deploy to any environment (<code>dev</code> and <code>prod</code>)</li>
@@ -191,7 +191,7 @@ export default function UserGuide() {
                   </div>
                   <div style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '6px' }}>Developer</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                    Demo user: <code style={{ color: '#93c5fd' }}>dev_gov</code> / <code style={{ color: '#93c5fd' }}>DevPass123!</code>
+                    Identity: Standard developer identity mapped to project workspaces
                   </div>
                   <ul style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <li>Provision workloads in authorized workspaces</li>
@@ -200,15 +200,6 @@ export default function UserGuide() {
                     <li>Inspect Model Armor guardrail rules</li>
                   </ul>
                 </div>
-              </div>
-
-              <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '10px', padding: '16px 20px', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#93c5fd', marginBottom: '6px' }}>
-                  💡 Fast-Fill Login Tip:
-                </div>
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
-                  When on the Login screen, click either <strong>"👑 Platform Admin"</strong> or <strong>"💻 Developer"</strong> to instantly populate credentials and sign in.
-                </p>
               </div>
             </div>
           )}
@@ -505,7 +496,7 @@ export default function UserGuide() {
               {[
                 {
                   title: 'Authenticate & Obtain Token',
-                  cmd: 'uv run python cli/main.py login --username admin_gov --password "AdminPass123!"',
+                  cmd: 'uv run python cli/main.py login --username <username> --password "<password>"',
                 },
                 {
                   title: 'List Governed Templates',

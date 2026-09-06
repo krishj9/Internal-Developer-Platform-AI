@@ -11,7 +11,7 @@ Base URL: `/` (Cloud Run / Local: `http://localhost:8000`)
   ```json
   {
     "username": "admin_gov",
-    "password": "AdminPass123!"
+    "password": "<password>"
   }
   ```
 - **Response (200 OK)**:
@@ -19,7 +19,7 @@ Base URL: `/` (Cloud Run / Local: `http://localhost:8000`)
   {
     "access_token": "eyJhbGciOiJIUzI1NiIs...",
     "token_type": "bearer",
-    "expires_in": 3600
+    "expires_in": "<seconds>"
   }
   ```
 

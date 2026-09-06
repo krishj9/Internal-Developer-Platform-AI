@@ -66,6 +66,6 @@ gcloud iam workload-identity-pools providers create-oidc github-provider \
 ```bash
 python scripts/bootstrap_admin_user.py \
   --username admin_gov \
-  --password "AdminPass123!" \
+  --password "<SECURE_PASSWORD>" \
   --email "admin@idp.internal"
 ```

@@ -36,7 +36,7 @@ GitHub Actions Runner
 ## 3. Control Plane Authentication & Sessions
 
 - **Passwords**: Hashed with Argon2id using recommended OWASP parameters (memory cost 65536 KiB, time cost 3 iterations, parallelism 4 threads).
-- **JWT Access Tokens**: 60-minute lifetime (3600 seconds), HMAC-SHA256 signed using secret key loaded from Google Secret Manager (`idp-jwt-signing-key`).
+- **JWT Access Tokens**: Cryptographically signed, time-bounded HMAC-SHA256 bearer tokens signed using secret key loaded from Google Secret Manager (`idp-jwt-signing-key`).
 - **Token Invalidation**: User records contain a `token_version` integer. Incrementing `token_version` invalidates all previously issued JWTs across the platform.
 - **Portal Storage**: Tokens stored in browser `localStorage`. Automatically cleared on logout or HTTP 401 response.
 
