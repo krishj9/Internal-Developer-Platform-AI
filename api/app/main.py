@@ -4,7 +4,9 @@ Main FastAPI application entrypoint for the IDP Control Plane.
 
 from contextlib import asynccontextmanager
 
+from api.app.api.admin_router import router as admin_router
 from api.app.api.auth_router import router as auth_router
+from api.app.api.callback_router import router as callback_router
 from api.app.api.deployment_router import router as deployment_router
 from api.app.api.request_router import router as request_router
 from api.app.api.template_router import router as template_router
@@ -70,6 +72,8 @@ def create_app() -> FastAPI:
     app.include_router(template_router)
     app.include_router(request_router)
     app.include_router(deployment_router)
+    app.include_router(callback_router)
+    app.include_router(admin_router)
 
     return app
 
