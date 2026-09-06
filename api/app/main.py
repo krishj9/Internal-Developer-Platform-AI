@@ -57,6 +57,25 @@ async def lifespan(app: FastAPI):
                 status="published",
             )
         )
+
+    # Seed default T2 Managed RAG template if not already present
+    t2 = await template_repo.get("t2-managed-rag", "2.0.0")
+    if not t2:
+        await template_repo.save(
+            TemplateRecord(
+                template_id="t2-managed-rag",
+                template_version="2.0.0",
+                template_commit_sha="010078cf6745f44da605f6fa0768b4f177c385a5",
+                display_name="Vertex AI Managed RAG Engine",
+                description="Governed Vertex AI RAG Engine stack with RagManagedDb.",
+                supported_environments=["dev"],
+                allowed_models=["text-embedding-004", "text-embedding-005"],
+                allowed_regions=["us-central1"],
+                cost_tier="medium",
+                manifest={"readiness": {"type": "rag_retrieval_smoke_test"}},
+                status="published",
+            )
+        )
     yield
 
 

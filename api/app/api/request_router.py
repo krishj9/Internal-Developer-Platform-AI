@@ -98,7 +98,7 @@ async def create_request(
             detail=f"Environment '{input_data.environment}' is not supported for this template.",
         )
 
-    model_input = input_data.inputs.get("model_name")
+    model_input = input_data.inputs.get("model_name") or input_data.inputs.get("embedding_model")
     if model_input and model_input not in template.allowed_models:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

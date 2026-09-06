@@ -1,0 +1,8 @@
+# IDP Platform Governed RAG Baseline Document
+
+This document verifies the readiness of the Vertex AI Managed RAG Engine.
+Target Deployment: T2 Managed RAG Stack
+Governed Embedding Model: text-embedding-004
+Verification Code: IDP-RAG-VERIFIED-2026
+
+The Internal Developer Platform provides secure, repeatable provisioning of agentic AI workloads on Google Cloud Platform using Workload Identity Federation.

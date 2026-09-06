@@ -52,6 +52,20 @@ async def seed_test_data():
         manifest={"readiness": {"type": "smoke_test"}},
         status="published",
     )
+    # Seed T2 template
+    t2 = TemplateRecord(
+        template_id="t2-managed-rag",
+        template_version="2.0.0",
+        template_commit_sha="010078cf6745f44da605f6fa0768b4f177c385a5",
+        display_name="Vertex AI Managed RAG Engine",
+        description="Governed Vertex AI RAG Engine stack with RagManagedDb.",
+        supported_environments=["dev"],
+        allowed_models=["text-embedding-004", "text-embedding-005"],
+        allowed_regions=["us-central1"],
+        cost_tier="medium",
+        manifest={"readiness": {"type": "rag_retrieval_smoke_test"}},
+        status="published",
+    )
     # Seed T3 template
     t3 = TemplateRecord(
         template_id="t3-cloud-run-agent",
@@ -67,6 +81,7 @@ async def seed_test_data():
         status="published",
     )
     await template_repo.save(t1)
+    await template_repo.save(t2)
     await template_repo.save(t3)
 
 
@@ -282,5 +297,36 @@ async def test_submit_t3_cloud_run_request():
         assert res.status_code == 202
         data = res.json()
         assert data["template_id"] == "t3-cloud-run-agent"
+        assert data["status"] == "DISPATCHED"
+        assert data["workspace"] == "ws-dev"
+
+
+@pytest.mark.asyncio
+async def test_submit_t2_managed_rag_request():
+    token = await get_auth_token()
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Submit T2 Managed RAG request
+        t2_payload = {
+            "workspace": "ws-dev",
+            "template_id": "t2-managed-rag",
+            "template_version": "2.0.0",
+            "environment": "dev",
+            "inputs": {
+                "corpus_name": "support-knowledge",
+                "embedding_model": "text-embedding-004",
+                "chunk_size": 512,
+                "region": "us-central1",
+                "source_gcs_prefix": "gs://idp-poc-dev-docs/support",
+            },
+        }
+        res = await client.post(
+            "/requests",
+            json=t2_payload,
+            headers={"Authorization": f"Bearer {token}", "Idempotency-Key": "key-t2-001"},
+        )
+        assert res.status_code == 202
+        data = res.json()
+        assert data["template_id"] == "t2-managed-rag"
         assert data["status"] == "DISPATCHED"
         assert data["workspace"] == "ws-dev"

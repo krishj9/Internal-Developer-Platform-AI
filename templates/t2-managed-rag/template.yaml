@@ -1,0 +1,127 @@
+id: t2-managed-rag
+version: 2.0.0
+display_name: Vertex AI Managed RAG Engine
+description: Governed Vertex AI RAG Engine stack with RagManagedDb and bounded GCS document ingestion.
+supported_environments:
+  - dev
+
+inputs:
+  type: object
+  additionalProperties: false
+  properties:
+    corpus_name:
+      type: string
+      pattern: "^[a-z0-9-]+$"
+      minLength: 3
+      maxLength: 30
+      description: Logical identifier for the Vertex AI RAG corpus
+    description:
+      type: string
+      maxLength: 100
+      description: Description of the corpus content
+    embedding_model:
+      type: string
+      enum:
+        - text-embedding-004
+        - text-embedding-005
+      description: Approved embedding model for vector index
+    chunk_size:
+      type: integer
+      enum:
+        - 256
+        - 512
+        - 1024
+      description: Maximum token chunk size for document chunking
+    chunk_overlap:
+      type: integer
+      enum:
+        - 50
+        - 100
+        - 200
+      description: Chunk overlap size in tokens
+    region:
+      type: string
+      enum:
+        - us-central1
+      description: Approved GCP region for deployment
+    source_gcs_prefix:
+      type: string
+      pattern: "^gs://[a-z0-9_.-]+(/[a-z0-9_./-]+)?$"
+      description: Bounded GCS URI prefix containing documents to ingest
+    allowed_mime_types:
+      type: array
+      items:
+        type: string
+        enum:
+          - application/pdf
+          - text/plain
+          - text/html
+          - text/markdown
+      description: Explicitly approved MIME types for document ingestion
+    max_document_count:
+      type: integer
+      minimum: 1
+      maximum: 100
+      description: Maximum number of documents allowed in ingestion job
+    max_total_size_mb:
+      type: integer
+      minimum: 1
+      maximum: 500
+      description: Maximum cumulative size of documents in MB
+  required:
+    - corpus_name
+    - embedding_model
+    - region
+
+defaults:
+  embedding_model: text-embedding-004
+  chunk_size: 512
+  chunk_overlap: 100
+  region: us-central1
+  allowed_mime_types:
+    - application/pdf
+    - text/plain
+    - text/markdown
+  max_document_count: 50
+  max_total_size_mb: 100
+  description: Governed Vertex AI RAG Corpus with RagManagedDb
+
+constraints:
+  allowed_embedding_models:
+    - text-embedding-004
+    - text-embedding-005
+  allowed_regions:
+    - us-central1
+  allowed_mime_types:
+    - application/pdf
+    - text/plain
+    - text/html
+    - text/markdown
+  resource_limits:
+    max_documents: 100
+    max_size_mb: 500
+  allowed_workspaces:
+    - default
+    - ws-dev
+
+cost_tier: medium
+
+readiness:
+  type: rag_retrieval_smoke_test
+  description: Verifies RAG corpus creation, document ingestion completion, and deterministic semantic retrieval against known smoke document.
+  smoke_script: scripts/smoke_test.py
+
+output_contract:
+  allowed_outputs:
+    - deployment_id
+    - corpus_name
+    - corpus_resource_name
+    - embedding_model
+    - region
+    - ingestion_status
+    - status
+
+lifecycle:
+  supports_create: true
+  supports_destroy: true
+  retention_notes: Vertex AI RAG Corpus, RagManagedDb vector index, and dedicated service account are deleted on destroy.
