@@ -1,0 +1,169 @@
+name: "Deploy T4 Governance"
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: "Correlation ID for request"
+        required: true
+      deployment_id:
+        description: "Unique deployment ID"
+        required: true
+      template_id:
+        description: "Template ID (must be t4-governance)"
+        required: true
+        default: "t4-governance"
+      template_version:
+        description: "Template semantic version"
+        required: true
+        default: "2.0.0"
+      template_commit_sha:
+        description: "Immutable commit SHA to checkout"
+        required: true
+      operation:
+        description: "Lifecycle operation: 'create' or 'destroy'"
+        required: true
+        default: "create"
+      workspace:
+        description: "Target workspace identifier"
+        required: true
+        default: "ws-dev"
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+      inputs_json:
+        description: "Validated template inputs JSON"
+        required: false
+        default: "{}"
+      callback_url:
+        description: "FastAPI Control Plane callback URL"
+        required: true
+      workload_identity_provider:
+        description: "WIF Provider full name"
+        required: true
+      service_account:
+        description: "Pipeline Service Account email"
+        required: true
+      state_bucket:
+        description: "GCS bucket for remote state"
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  execute-lifecycle:
+    name: Execute T4 Lifecycle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Immutable Template Release
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.template_commit_sha }}
+
+      - name: Authenticate to GCP via WIF
+        id: gcp_auth
+        uses: ./.github/actions/authenticate-gcp-wif
+        with:
+          workload_identity_provider: ${{ github.event.inputs.workload_identity_provider }}
+          service_account: ${{ github.event.inputs.service_account }}
+          id_token_audience: ${{ github.event.inputs.callback_url }}
+
+      - name: Post PLANNING Callback
+        uses: ./.github/actions/post-pipeline-callback
+        with:
+          callback_url: ${{ github.event.inputs.callback_url }}
+          id_token: ${{ steps.gcp_auth.outputs.id_token }}
+          state_bucket: ${{ github.event.inputs.state_bucket }}
+          request_id: ${{ github.event.inputs.request_id }}
+          github_run_id: ${{ github.run_id }}
+          event_sequence: "1"
+          payload_json: |
+            {
+              "request_id": "${{ github.event.inputs.request_id }}",
+              "deployment_id": "${{ github.event.inputs.deployment_id }}",
+              "template_id": "${{ github.event.inputs.template_id }}",
+              "template_version": "${{ github.event.inputs.template_version }}",
+              "template_commit_sha": "${{ github.event.inputs.template_commit_sha }}",
+              "repository": "${{ github.repository }}",
+              "workflow": "deploy-t4.yml",
+              "github_run_id": "${{ github.run_id }}",
+              "event_sequence": 1,
+              "operation": "${{ github.event.inputs.operation }}",
+              "status": "PLANNING",
+              "summary": "Governance and Cloud Monitoring planning stage initiated.",
+              "artifact_references": []
+            }
+
+      - name: Post APPLYING Callback
+        uses: ./.github/actions/post-pipeline-callback
+        with:
+          callback_url: ${{ github.event.inputs.callback_url }}
+          id_token: ${{ steps.gcp_auth.outputs.id_token }}
+          state_bucket: ${{ github.event.inputs.state_bucket }}
+          request_id: ${{ github.event.inputs.request_id }}
+          github_run_id: ${{ github.run_id }}
+          event_sequence: "2"
+          payload_json: |
+            {
+              "request_id": "${{ github.event.inputs.request_id }}",
+              "deployment_id": "${{ github.event.inputs.deployment_id }}",
+              "template_id": "${{ github.event.inputs.template_id }}",
+              "template_version": "${{ github.event.inputs.template_version }}",
+              "template_commit_sha": "${{ github.event.inputs.template_commit_sha }}",
+              "repository": "${{ github.repository }}",
+              "workflow": "deploy-t4.yml",
+              "github_run_id": "${{ github.run_id }}",
+              "event_sequence": 2,
+              "operation": "${{ github.event.inputs.operation }}",
+              "status": "APPLYING",
+              "summary": "Governance alert policies and Model Armor templates provisioning in progress.",
+              "artifact_references": []
+            }
+
+      - name: Execute Terraform Lifecycle
+        id: terraform
+        uses: ./.github/actions/terraform-lifecycle
+        with:
+          working_directory: "templates/t4-governance/terraform"
+          state_bucket: ${{ github.event.inputs.state_bucket }}
+          state_key: "templates/t4-governance/${{ github.event.inputs.deployment_id }}/terraform.tfstate"
+          operation: ${{ github.event.inputs.operation == 'destroy' && 'destroy' || 'apply' }}
+          var_file_content: ${{ github.event.inputs.inputs_json }}
+
+      - name: Run Readiness Test (Create Only)
+        if: github.event.inputs.operation == 'create'
+        uses: ./.github/actions/run-readiness-test
+        with:
+          smoke_test_script: "templates/t4-governance/model_armor/smoke_test.py"
+          working_directory: "templates/t4-governance/model_armor"
+
+      - name: Post SUCCEEDED Callback
+        if: success()
+        uses: ./.github/actions/post-pipeline-callback
+        with:
+          callback_url: ${{ github.event.inputs.callback_url }}
+          id_token: ${{ steps.gcp_auth.outputs.id_token }}
+          state_bucket: ${{ github.event.inputs.state_bucket }}
+          request_id: ${{ github.event.inputs.request_id }}
+          github_run_id: ${{ github.run_id }}
+          event_sequence: "3"
+          payload_json: |
+            {
+              "request_id": "${{ github.event.inputs.request_id }}",
+              "deployment_id": "${{ github.event.inputs.deployment_id }}",
+              "template_id": "${{ github.event.inputs.template_id }}",
+              "template_version": "${{ github.event.inputs.template_version }}",
+              "template_commit_sha": "${{ github.event.inputs.template_commit_sha }}",
+              "repository": "${{ github.repository }}",
+              "workflow": "deploy-t4.yml",
+              "github_run_id": "${{ github.run_id }}",
+              "event_sequence": 3,
+              "operation": "${{ github.event.inputs.operation }}",
+              "status": "SUCCEEDED",
+              "summary": "Governance lifecycle ${{ github.event.inputs.operation }} completed successfully.",
+              "artifact_references": []
+            }

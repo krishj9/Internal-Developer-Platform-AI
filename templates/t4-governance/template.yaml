@@ -1,0 +1,94 @@
+id: t4-governance
+version: 2.0.0
+display_name: Governance & Operational Controls
+description: Governed Model Armor safety guardrails, Cloud Monitoring alerts, and automated TTL lifecycle policies.
+supported_environments:
+  - dev
+  - prod
+
+inputs:
+  type: object
+  additionalProperties: false
+  properties:
+    policy_name:
+      type: string
+      pattern: "^[a-z0-9-]+$"
+      minLength: 3
+      maxLength: 30
+      description: Logical identifier for the governance policy
+    model_armor_mode:
+      type: string
+      enum:
+        - block
+        - redact
+        - allow_with_audit
+      description: Action taken when Model Armor filter detects policy violation
+    pii_detection:
+      type: boolean
+      description: Enable automated PII detection and redaction/blocking
+    prompt_injection_filter:
+      type: boolean
+      description: Enable detection and blocking of prompt injection / jailbreak attempts
+    monthly_budget_usd:
+      type: integer
+      minimum: 10
+      maximum: 10000
+      description: Monthly spend limit threshold for budget alerting
+    ttl_days:
+      type: integer
+      minimum: 1
+      maximum: 30
+      description: Default time-to-live in days for development deployments
+    region:
+      type: string
+      enum:
+        - us-central1
+      description: GCP region for monitoring and policy configuration
+  required:
+    - policy_name
+    - model_armor_mode
+    - monthly_budget_usd
+    - region
+
+defaults:
+  model_armor_mode: block
+  pii_detection: true
+  prompt_injection_filter: true
+  monthly_budget_usd: 100
+  ttl_days: 7
+  region: us-central1
+
+constraints:
+  allowed_modes:
+    - block
+    - redact
+    - allow_with_audit
+  max_budget_usd: 10000
+  max_ttl_days: 30
+  allowed_regions:
+    - us-central1
+  allowed_workspaces:
+    - default
+    - ws-dev
+    - ws-prod
+
+cost_tier: low
+
+readiness:
+  type: policy_verification_test
+  description: Validates Model Armor screening rules (prompt, tool input, output) and Cloud Monitoring alert policy creation.
+  smoke_script: model_armor/smoke_test.py
+
+output_contract:
+  allowed_outputs:
+    - deployment_id
+    - policy_name
+    - model_armor_mode
+    - alert_policy_id
+    - ttl_days
+    - status
+
+lifecycle:
+  supports_create: true
+  supports_destroy: true
+  retention_notes: Model Armor policy templates, Cloud Monitoring alert policies, and dedicated service accounts are cleaned up on destroy.

@@ -11,6 +11,7 @@ from api.app.api.admin_router import router as admin_router
 from api.app.api.auth_router import router as auth_router
 from api.app.api.callback_router import router as callback_router
 from api.app.api.deployment_router import router as deployment_router
+from api.app.api.governance_router import router as governance_router
 from api.app.api.request_router import router as request_router
 from api.app.api.template_router import router as template_router
 from api.app.core.settings import settings
@@ -76,6 +77,28 @@ async def lifespan(app: FastAPI):
                 status="published",
             )
         )
+
+    # Seed default T4 Governance template if not already present
+    t4 = await template_repo.get("t4-governance", "2.0.0")
+    if not t4:
+        await template_repo.save(
+            TemplateRecord(
+                template_id="t4-governance",
+                template_version="2.0.0",
+                template_commit_sha="010078cf6745f44da605f6fa0768b4f177c385a5",
+                display_name="Governance & Operational Controls",
+                description=(
+                    "Governed Model Armor guardrails, Cloud Monitoring alerts, "
+                    "and automated TTL policies."
+                ),
+                supported_environments=["dev", "prod"],
+                allowed_models=[],
+                allowed_regions=["us-central1"],
+                cost_tier="low",
+                manifest={"readiness": {"type": "policy_verification_test"}},
+                status="published",
+            )
+        )
     yield
 
 
@@ -113,6 +136,7 @@ def create_app() -> FastAPI:
     app.include_router(deployment_router)
     app.include_router(callback_router)
     app.include_router(admin_router)
+    app.include_router(governance_router)
 
     return app
 

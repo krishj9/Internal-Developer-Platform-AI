@@ -1,0 +1,42 @@
+name: "Cleanup Orphaned Deployments"
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # Run daily at 02:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run mode (true/false)"
+        required: false
+        default: "false"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  ttl-cleanup:
+    name: Execute TTL Cleanup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via WIF
+        id: gcp_auth
+        uses: ./.github/actions/authenticate-gcp-wif
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_PIPELINE_SERVICE_ACCOUNT }}
+          id_token_audience: ${{ secrets.IDP_API_BASE_URL }}
+
+      - name: Run TTL Cleanup Reconciliation
+        env:
+          API_URL: ${{ secrets.IDP_API_BASE_URL }}
+          ID_TOKEN: ${{ steps.gcp_auth.outputs.id_token }}
+        run: |
+          echo "Triggering automated TTL cleanup for expired deployments..."
+          curl -s -X POST "${API_URL}/governance/cleanup-expired" \
+            -H "Authorization: Bearer ${ID_TOKEN}" \
+            -H "Content-Type: application/json"

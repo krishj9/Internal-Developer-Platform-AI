@@ -50,6 +50,10 @@ class DeploymentRepository(ABC):
         pass
 
     @abstractmethod
+    async def list_all(self) -> list[DeploymentRecord]:
+        pass
+
+    @abstractmethod
     async def save(self, deployment: DeploymentRecord) -> None:
         pass
 
@@ -112,6 +116,14 @@ class AuditEventRepository(ABC):
     async def list_by_workspace(self, workspace: str, limit: int = 50) -> list[AuditEventRecord]:
         pass
 
+    @abstractmethod
+    async def list_by_actor(self, actor_id: str, limit: int = 50) -> list[AuditEventRecord]:
+        pass
+
+    @abstractmethod
+    async def list_all(self, limit: int = 100) -> list[AuditEventRecord]:
+        pass
+
 
 class IdempotencyRepository(ABC):
     @abstractmethod
@@ -160,6 +172,9 @@ class InMemoryDeploymentRepository(DeploymentRepository):
         if status:
             results = [d for d in results if d.status == status]
         return sorted(results, key=lambda x: x.created_at, reverse=True)
+
+    async def list_all(self) -> list[DeploymentRecord]:
+        return sorted(list(self._deployments.values()), key=lambda x: x.created_at, reverse=True)
 
     async def save(self, deployment: DeploymentRecord) -> None:
         async with self._lock:
@@ -270,6 +285,13 @@ class InMemoryAuditEventRepository(AuditEventRepository):
     async def list_by_workspace(self, workspace: str, limit: int = 50) -> list[AuditEventRecord]:
         results = [a for a in self._audits if a.safe_metadata.get("workspace") == workspace]
         return sorted(results, key=lambda x: x.timestamp, reverse=True)[:limit]
+
+    async def list_by_actor(self, actor_id: str, limit: int = 50) -> list[AuditEventRecord]:
+        results = [a for a in self._audits if a.actor_id == actor_id]
+        return sorted(results, key=lambda x: x.timestamp, reverse=True)[:limit]
+
+    async def list_all(self, limit: int = 100) -> list[AuditEventRecord]:
+        return sorted(self._audits, key=lambda x: x.timestamp, reverse=True)[:limit]
 
 
 class InMemoryIdempotencyRepository(IdempotencyRepository):
