@@ -174,6 +174,42 @@ def list_deployments(workspace):
         )
 
 
+@deployments_group.command("config")
+@click.argument("deployment_id")
+@click.option("--out", "-o", default=None, help="Output file path (e.g. idp-config.json)")
+def get_deployment_config(deployment_id, out):
+    """Retrieve or export workload configuration for a deployment."""
+    client, _ = get_client()
+    res = client.get(f"/deployments/{deployment_id}/config")
+    if res.status_code != 200:
+        click.echo(f"Error: {res.text}", err=True)
+        sys.exit(1)
+    data = res.json()
+    safe_config = data.get("safe_config", {})
+    outputs = safe_config.get("outputs", {})
+    workload_config = {
+        "deployment_id": safe_config.get("deployment_id"),
+        "workspace": safe_config.get("workspace"),
+        "environment": safe_config.get("environment"),
+        "project_id": safe_config.get("project_id"),
+        "template_id": safe_config.get("template_id"),
+        "template_version": safe_config.get("template_version"),
+        "status": safe_config.get("status"),
+        "model_name": outputs.get("model_name"),
+        "region": outputs.get("region"),
+        "runtime_service_account": outputs.get("runtime_sa_email"),
+        "staging_bucket": f"idp-state-{safe_config.get('project_id')}",
+        "raw_outputs": outputs,
+    }
+    config_json = json.dumps(workload_config, indent=2)
+    if out:
+        with open(out, "w") as f:
+            f.write(config_json + "\n")
+        click.echo(f"Workload configuration exported to: {out}")
+    else:
+        click.echo(config_json)
+
+
 @deployments_group.command("destroy")
 @click.argument("deployment_id")
 def destroy_deployment(deployment_id):

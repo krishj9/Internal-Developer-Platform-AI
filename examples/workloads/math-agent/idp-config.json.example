@@ -1,0 +1,10 @@
+{
+  "deployment_id": "dep-a1b2c3d4e5f6",
+  "workspace": "ws-dev",
+  "environment": "dev",
+  "project_id": "mybrightday-dev",
+  "region": "us-central1",
+  "model_name": "gemini-2.5-flash",
+  "runtime_service_account": "sa-t1-a1b2c3d4e5f6@mybrightday-dev.iam.gserviceaccount.com",
+  "staging_bucket": "idp-state-mybrightday-dev"
+}

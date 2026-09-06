@@ -141,6 +141,7 @@ async def get_deployment_config(
         "deployment_id": dep.deployment_id,
         "workspace": dep.workspace,
         "environment": dep.environment,
+        "project_id": settings.PROJECT_ID,
         "template_id": dep.template_id,
         "template_version": dep.template_version,
         "status": dep.status,

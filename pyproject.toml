@@ -36,7 +36,7 @@ include = ["api*", "cli*"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["api/tests", "templates", "cli/tests"]
+testpaths = ["api/tests", "templates", "cli/tests", "examples/workloads/math-agent/tests"]
 python_files = ["test_*.py"]
 pythonpath = ["."]
 asyncio_mode = "auto"

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import DestroyModal from './DestroyModal';
-import { Server, Trash2, Clock, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, Code } from 'lucide-react';
+import { Server, Trash2, Clock, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, Code, Download } from 'lucide-react';
 
 export default function DeploymentsList({ onTrackRequest }) {
   const { activeWorkspace } = useAuth();
@@ -32,6 +32,32 @@ export default function DeploymentsList({ onTrackRequest }) {
   const handleDestroySuccess = (res) => {
     onTrackRequest(res.request_id);
     loadDeployments();
+  };
+
+  const handleDownloadConfig = (dep) => {
+    const outputs = dep.safe_outputs || {};
+    const config = {
+      deployment_id: dep.deployment_id,
+      workspace: dep.workspace,
+      environment: dep.environment,
+      template_id: dep.template_id,
+      template_version: dep.template_version,
+      status: dep.status,
+      model_name: outputs.model_name || 'gemini-2.5-flash',
+      region: outputs.region || 'us-central1',
+      runtime_service_account: outputs.runtime_sa_email || '',
+      staging_bucket: `idp-state-${dep.workspace}`,
+      raw_outputs: outputs,
+    };
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `idp-config-${dep.deployment_id}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -164,15 +190,29 @@ export default function DeploymentsList({ onTrackRequest }) {
       {/* Outputs / Config Modal */}
       {viewConfigDep && (
         <div className="modal-overlay" onClick={() => setViewConfigDep(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Safe Outputs: {viewConfigDep.deployment_id}</h3>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Safe Outputs: {viewConfigDep.deployment_id}</h3>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Workload configuration for application deployment</div>
+              </div>
               <button onClick={() => setViewConfigDep(null)} className="btn btn-secondary" style={{ padding: '4px 8px' }}>✕</button>
             </div>
             <div style={{ padding: '20px 24px' }}>
-              <pre style={{ background: '#090d16', padding: '16px', borderRadius: '8px', overflowX: 'auto', fontSize: '0.8rem', color: '#93c5fd', border: '1px solid var(--border-subtle)' }}>
+              <pre style={{ background: '#090d16', padding: '16px', borderRadius: '8px', overflowX: 'auto', fontSize: '0.8rem', color: '#93c5fd', border: '1px solid var(--border-subtle)', marginBottom: '16px' }}>
                 {JSON.stringify(viewConfigDep.safe_outputs || {}, null, 2)}
               </pre>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button
+                  id="btn-download-config"
+                  className="btn btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', padding: '8px 14px' }}
+                  onClick={() => handleDownloadConfig(viewConfigDep)}
+                >
+                  <Download size={14} />
+                  <span>Download idp-config.json</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

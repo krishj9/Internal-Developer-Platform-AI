@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IDP Control Plane Architecture | Governed Agentic AI on GCP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
   <style>
     :root {
       --bg-base: #060911;
@@ -15,18 +18,18 @@
       --bg-card-hover: rgba(22, 33, 58, 0.85);
       --border-color: rgba(255, 255, 255, 0.08);
       --border-accent: rgba(59, 130, 246, 0.35);
-      
+
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
-      
+
       --accent-blue: #3b82f6;
       --accent-cyan: #06b6d4;
       --accent-emerald: #10b981;
       --accent-purple: #8b5cf6;
       --accent-amber: #f59e0b;
       --accent-rose: #ef4444;
-      
+
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
@@ -48,7 +51,7 @@
       font-family: var(--font-sans);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
-      background-image: 
+      background-image:
         radial-gradient(at 10% 10%, rgba(59, 130, 246, 0.07) 0px, transparent 45%),
         radial-gradient(at 90% 90%, rgba(139, 92, 246, 0.07) 0px, transparent 45%);
       background-attachment: fixed;
@@ -127,7 +130,8 @@
       margin-bottom: 2px;
     }
 
-    .nav-link:hover, .nav-link.active {
+    .nav-link:hover,
+    .nav-link.active {
       color: #fff;
       background: rgba(59, 130, 246, 0.15);
       border-left: 3px solid var(--accent-blue);
@@ -250,7 +254,7 @@
       padding: 24px;
       margin: 24px 0;
       overflow-x: auto;
-      box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
     }
 
     /* Tables */
@@ -323,10 +327,29 @@
       text-transform: uppercase;
     }
 
-    .badge-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-    .badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .badge-purple { background: rgba(139, 92, 246, 0.15); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .badge-emerald {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-blue {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .badge-amber {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-purple {
+      background: rgba(139, 92, 246, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
 
     /* Interactive Pill Switcher */
     .tab-pills {
@@ -347,233 +370,282 @@
       transition: all 0.2s ease;
     }
 
-    .tab-pill:hover, .tab-pill.active {
+    .tab-pill:hover,
+    .tab-pill.active {
       background: var(--accent-blue);
       color: #fff;
       border-color: var(--accent-blue);
     }
   </style>
 </head>
+
 <body>
 
-<div class="app-container">
-  <!-- Sidebar Navigation -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-logo">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      </div>
-      <div class="brand-text">
-        <h1>IDP Architecture</h1>
-        <p>Spec v2.1 Reference</p>
-      </div>
-    </div>
-
-    <nav>
-      <div class="nav-group-title">Foundations</div>
-      <a href="#overview" class="nav-link">1. Executive Overview</a>
-      <a href="#diagram" class="nav-link">2. System Architecture</a>
-      <a href="#boundaries" class="nav-link">3. Plane Separation</a>
-
-      <div class="nav-group-title">Security & Identity</div>
-      <a href="#security-iam" class="nav-link">4. Zero-Key WIF Model</a>
-      <a href="#auth-control-plane" class="nav-link">5. Control Plane Auth</a>
-      <a href="#pipeline-trust" class="nav-link">6. Callback Trust Boundary</a>
-
-      <div class="nav-group-title">Workloads & Lifecycle</div>
-      <a href="#state-machine" class="nav-link">7. State Machines & Locking</a>
-      <a href="#templates" class="nav-link">8. Governed AI Templates</a>
-      <a href="#production-gate" class="nav-link">9. Production Gates & Alerts</a>
-      <a href="#verification" class="nav-link">10. Testing & Verification</a>
-    </nav>
-  </aside>
-
-  <!-- Main Technical Documentation -->
-  <main class="main-content">
-    <header class="doc-header">
-      <div class="doc-badge">GCP Enterprise Reference Architecture</div>
-      <h1 class="doc-title">Internal Developer Platform for Agentic AI</h1>
-      <p class="doc-subtitle">
-        A secure, repeatable, self-service control plane designed to provision, govern, monitor, and tear down agentic AI infrastructure on Google Cloud Platform.
-      </p>
-    </header>
-
-    <!-- SECTION 1: Overview -->
-    <section id="overview">
-      <h2>1. Executive Overview</h2>
-      <p>
-        Enterprise adoption of Agentic AI requires robust infrastructure governance. Developers need frictionless access to Vertex AI reasoning engines, managed retrieval-augmented generation (RAG) vector databases, and containerized Cloud Run agents—without compromising enterprise security boundaries.
-      </p>
-      <div class="grid-2">
-        <div class="glass-card">
-          <h3 style="color: var(--accent-cyan); margin-top:0;">The Problem</h3>
-          <p>
-            Shadow AI deployments, long-lived service account JSON keys committed to git, unmonitored token consumption, untracked orphan cloud resources, and ad-hoc infrastructure provisioning without reproducible audit ledgers.
-          </p>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
         </div>
-        <div class="glass-card">
-          <h3 style="color: var(--accent-emerald); margin-top:0;">The Solution</h3>
-          <p>
-            An asynchronous, serverless control plane (FastAPI + Firestore Native) coordinating with an isolated execution plane (GitHub Actions + WIF + Terraform) to deliver governed, version-pinned AI templates with automated readiness validation.
-          </p>
+        <div class="brand-text">
+          <h1>IDP Architecture</h1>
+          <p>Spec v2.1 Reference</p>
         </div>
       </div>
-    </section>
 
-    <!-- SECTION 2: Architecture Diagram -->
-    <section id="diagram">
-      <h2>2. System Architecture Diagram</h2>
-      <p>
-        The platform enforces an absolute boundary between API control plane management and infrastructure provisioning:
-      </p>
-      
-      <div class="diagram-container">
-        <svg viewBox="0 0 960 520" width="100%" height="520" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="grad-client" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#1e293b"/>
-              <stop offset="100%" stop-color="#0f172a"/>
-            </linearGradient>
-            <linearGradient id="grad-cp" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#1e3a8a"/>
-              <stop offset="100%" stop-color="#0f172a"/>
-            </linearGradient>
-            <linearGradient id="grad-pipe" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#4c1d95"/>
-              <stop offset="100%" stop-color="#0f172a"/>
-            </linearGradient>
-            <linearGradient id="grad-workload" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#064e3b"/>
-              <stop offset="100%" stop-color="#0f172a"/>
-            </linearGradient>
-          </defs>
+      <nav>
+        <div class="nav-group-title">Foundations</div>
+        <a href="#overview" class="nav-link">1. Executive Overview</a>
+        <a href="#diagram" class="nav-link">2. System Architecture</a>
+        <a href="#boundaries" class="nav-link">3. Plane Separation</a>
 
-          <!-- CLIENT TIER -->
-          <rect x="20" y="30" width="220" height="460" rx="12" fill="url(#grad-client)" stroke="#334155" stroke-width="1.5"/>
-          <text x="40" y="65" font-family="'Outfit', sans-serif" font-size="16" font-weight="700" fill="#f8fafc">Client Interfaces</text>
-          
-          <rect x="40" y="90" width="180" height="90" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1"/>
-          <text x="55" y="125" font-family="'Inter', sans-serif" font-size="14" font-weight="600" fill="#60a5fa">React Developer Portal</text>
-          <text x="55" y="150" font-family="'Inter', sans-serif" font-size="11" fill="#94a3b8">Vite + Vanilla CSS Tokens</text>
+        <div class="nav-group-title">Security & Identity</div>
+        <a href="#security-iam" class="nav-link">4. Zero-Key WIF Model</a>
+        <a href="#auth-control-plane" class="nav-link">5. Control Plane Auth</a>
+        <a href="#pipeline-trust" class="nav-link">6. Callback Trust Boundary</a>
 
-          <rect x="40" y="210" width="180" height="90" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1"/>
-          <text x="55" y="245" font-family="'Inter', sans-serif" font-size="14" font-weight="600" fill="#a78bfa">IDP Python CLI</text>
-          <text x="55" y="270" font-family="'Inter', sans-serif" font-size="11" fill="#94a3b8">Click Terminal Client</text>
+        <div class="nav-group-title">Workloads & Lifecycle</div>
+        <a href="#state-machine" class="nav-link">7. State Machines & Locking</a>
+        <a href="#templates" class="nav-link">8. Governed AI Templates</a>
+        <a href="#production-gate" class="nav-link">9. Production Gates & Alerts</a>
+        <a href="#verification" class="nav-link">10. Testing & Verification</a>
+      </nav>
+    </aside>
 
-          <!-- CONTROL PLANE TIER -->
-          <rect x="270" y="30" width="300" height="460" rx="12" fill="url(#grad-cp)" stroke="#2563eb" stroke-width="1.5"/>
-          <text x="290" y="65" font-family="'Outfit', sans-serif" font-size="16" font-weight="700" fill="#f8fafc">Control Plane (Cloud Run)</text>
+    <!-- Main Technical Documentation -->
+    <main class="main-content">
+      <header class="doc-header">
+        <div class="doc-badge">Enterprise Reference Architecture</div>
+        <h1 class="doc-title">Internal Developer Platform for Agentic AI</h1>
+        <p class="doc-subtitle">
+          A secure, repeatable, self-service control plane designed to provision, govern, monitor, and tear down agentic
+          AI infrastructure on Google Cloud Platform.
+        </p>
+      </header>
 
-          <rect x="290" y="90" width="260" height="150" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1"/>
-          <text x="305" y="115" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#93c5fd">FastAPI Control Plane</text>
-          <text x="305" y="140" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• Argon2id &amp; 60-min JWT Auth</text>
-          <text x="305" y="160" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• 24h Idempotency (SHA-256)</text>
-          <text x="305" y="180" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• Atomic Deployment Locking</text>
-          <text x="305" y="200" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• Model Armor Screening Engine</text>
-          <text x="305" y="220" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• Pub/Sub Notification Publisher</text>
+      <!-- SECTION 1: Overview -->
+      <section id="overview">
+        <h2>1. Executive Overview</h2>
+        <p>
+          Enterprise adoption of Agentic AI requires robust infrastructure governance. Developers need frictionless
+          access to Vertex AI reasoning engines, managed retrieval-augmented generation (RAG) vector databases, and
+          containerized Cloud Run agents—without compromising enterprise security boundaries.
+        </p>
+        <div class="grid-2">
+          <div class="glass-card">
+            <h3 style="color: var(--accent-cyan); margin-top:0;">The Problem</h3>
+            <p>
+              Shadow AI deployments, long-lived service account JSON keys committed to git, unmonitored token
+              consumption, untracked orphan cloud resources, and ad-hoc infrastructure provisioning without reproducible
+              audit ledgers.
+            </p>
+          </div>
+          <div class="glass-card">
+            <h3 style="color: var(--accent-emerald); margin-top:0;">The Solution</h3>
+            <p>
+              An asynchronous, serverless control plane (FastAPI + Firestore Native) coordinating with an isolated
+              execution plane (GitHub Actions + WIF + Terraform) to deliver governed, version-pinned AI templates with
+              automated readiness validation.
+            </p>
+          </div>
+        </div>
+      </section>
 
-          <rect x="290" y="260" width="120" height="100" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1"/>
-          <text x="305" y="295" font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#60a5fa">Firestore</text>
-          <text x="305" y="315" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">Native Mode</text>
-          <text x="305" y="335" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">State &amp; Audit</text>
+      <!-- SECTION 2: Architecture Diagram -->
+      <section id="diagram">
+        <h2>2. System Architecture Diagram</h2>
+        <p>
+          The platform enforces an absolute boundary between API control plane management and infrastructure
+          provisioning:
+        </p>
 
-          <rect x="430" y="260" width="120" height="100" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1"/>
-          <text x="445" y="295" font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#60a5fa">Secret Mgr</text>
-          <text x="445" y="315" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">JWT Signing Key</text>
-          <text x="445" y="335" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">GitHub PAT</text>
+        <div class="diagram-container">
+          <svg viewBox="0 0 960 520" width="100%" height="520" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="grad-client" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#1e293b" />
+                <stop offset="100%" stop-color="#0f172a" />
+              </linearGradient>
+              <linearGradient id="grad-cp" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#1e3a8a" />
+                <stop offset="100%" stop-color="#0f172a" />
+              </linearGradient>
+              <linearGradient id="grad-pipe" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#4c1d95" />
+                <stop offset="100%" stop-color="#0f172a" />
+              </linearGradient>
+              <linearGradient id="grad-workload" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#064e3b" />
+                <stop offset="100%" stop-color="#0f172a" />
+              </linearGradient>
+            </defs>
 
-          <rect x="290" y="380" width="260" height="90" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1"/>
-          <text x="305" y="410" font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#60a5fa">Callback Receiver (/callbacks/pipeline)</text>
-          <text x="305" y="430" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">• Google OIDC ID Token Verification</text>
-          <text x="305" y="450" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">• Monotonic Sequence &amp; Context Binding</text>
+            <!-- CLIENT TIER -->
+            <rect x="20" y="30" width="220" height="460" rx="12" fill="url(#grad-client)" stroke="#334155"
+              stroke-width="1.5" />
+            <text x="40" y="65" font-family="'Outfit', sans-serif" font-size="16" font-weight="700"
+              fill="#f8fafc">Client Interfaces</text>
 
-          <!-- EXECUTION PLANE TIER -->
-          <rect x="600" y="30" width="340" height="460" rx="12" fill="url(#grad-pipe)" stroke="#7c3aed" stroke-width="1.5"/>
-          <text x="620" y="65" font-family="'Outfit', sans-serif" font-size="16" font-weight="700" fill="#f8fafc">Execution Plane (GitHub Actions + WIF)</text>
+            <rect x="40" y="90" width="180" height="90" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1" />
+            <text x="55" y="125" font-family="'Inter', sans-serif" font-size="14" font-weight="600" fill="#60a5fa">React
+              Developer Portal</text>
+            <text x="55" y="150" font-family="'Inter', sans-serif" font-size="11" fill="#94a3b8">Vite + Vanilla CSS
+              Tokens</text>
 
-          <rect x="620" y="90" width="300" height="110" rx="8" fill="#0f172a" stroke="#8b5cf6" stroke-width="1"/>
-          <text x="635" y="115" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#c084fc">Job: plan</text>
-          <text x="635" y="140" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">1. Authenticate via GCP WIF (Keyless)</text>
-          <text x="635" y="160" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">2. Post PLANNING Callback (Seq 1)</text>
-          <text x="635" y="180" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">3. Generate Terraform Plan</text>
+            <rect x="40" y="210" width="180" height="90" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1" />
+            <text x="55" y="245" font-family="'Inter', sans-serif" font-size="14" font-weight="600" fill="#a78bfa">IDP
+              Python CLI</text>
+            <text x="55" y="270" font-family="'Inter', sans-serif" font-size="11" fill="#94a3b8">Click Terminal
+              Client</text>
 
-          <rect x="620" y="220" width="300" height="140" rx="8" fill="#0f172a" stroke="#8b5cf6" stroke-width="1"/>
-          <text x="635" y="245" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#c084fc">Job: apply (Environment Gate)</text>
-          <text x="635" y="270" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">1. Manual Approval Gate (prod env)</text>
-          <text x="635" y="290" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">2. Post APPLYING Callback (Seq 2)</text>
-          <text x="635" y="310" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">3. Terraform Apply to Isolated GCS State</text>
-          <text x="635" y="330" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">4. Run Pre-Activation Smoke Test</text>
-          <text x="635" y="350" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">5. Post SUCCEEDED Callback (Seq 3)</text>
+            <!-- CONTROL PLANE TIER -->
+            <rect x="270" y="30" width="300" height="460" rx="12" fill="url(#grad-cp)" stroke="#2563eb"
+              stroke-width="1.5" />
+            <text x="290" y="65" font-family="'Outfit', sans-serif" font-size="16" font-weight="700"
+              fill="#f8fafc">Control Plane (Cloud Run)</text>
 
-          <rect x="620" y="380" width="300" height="90" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
-          <text x="635" y="410" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#34d399">Target Workload Data Plane</text>
-          <text x="635" y="430" font-family="'Inter', sans-serif" font-size="10" fill="#a7f3d0">T1: Agent Engine · T2: Managed RAG Db</text>
-          <text x="635" y="450" font-family="'Inter', sans-serif" font-size="10" fill="#a7f3d0">T3: Cloud Run v2 · T4: Model Armor &amp; Alerts</text>
+            <rect x="290" y="90" width="260" height="150" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1" />
+            <text x="305" y="115" font-family="'Inter', sans-serif" font-size="13" font-weight="700"
+              fill="#93c5fd">FastAPI Control Plane</text>
+            <text x="305" y="140" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• Argon2id &amp;
+              60-min JWT Auth</text>
+            <text x="305" y="160" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• 24h Idempotency
+              (SHA-256)</text>
+            <text x="305" y="180" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• Atomic Deployment
+              Locking</text>
+            <text x="305" y="200" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• Model Armor
+              Screening Engine</text>
+            <text x="305" y="220" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">• Pub/Sub Notification
+              Publisher</text>
 
-          <!-- CONNECTING ARROWS -->
-          <!-- Client -> CP -->
-          <path d="M 220 135 L 290 135" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)"/>
-          <path d="M 220 255 L 290 200" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
-          
-          <!-- CP -> Pipeline Dispatch -->
-          <path d="M 550 145 L 620 145" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4"/>
-          
-          <!-- Pipeline Callback -> CP -->
-          <path d="M 620 330 L 550 425" stroke="#34d399" stroke-width="2"/>
-        </svg>
-      </div>
-    </section>
+            <rect x="290" y="260" width="120" height="100" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1" />
+            <text x="305" y="295" font-family="'Inter', sans-serif" font-size="12" font-weight="700"
+              fill="#60a5fa">Firestore</text>
+            <text x="305" y="315" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">Native Mode</text>
+            <text x="305" y="335" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">State &amp;
+              Audit</text>
 
-    <!-- SECTION 3: Plane Separation -->
-    <section id="boundaries">
-      <h2>3. Plane Separation & Boundaries</h2>
-      <p>
-        The platform defines strict, non-negotiable boundaries between the three runtime planes:
-      </p>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Plane</th>
-              <th>Technologies</th>
-              <th>Responsibilities</th>
-              <th>Security Constraints</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Control Plane</strong></td>
-              <td>FastAPI, Python 3.11+, Cloud Run, Firestore Native</td>
-              <td>User auth, template catalog, request queuing, concurrency locks, state records, safe telemetry.</td>
-              <td>Zero direct Terraform execution; cannot access data planes; reads secrets via IAM.</td>
-            </tr>
-            <tr>
-              <td><strong>Execution Plane</strong></td>
-              <td>GitHub Actions, WIF, Terraform 1.9+, Google Cloud Storage</td>
-              <td>Checkout immutable templates, plan/apply infrastructure, run smoke tests, post monotonic callbacks.</td>
-              <td>Keyless OIDC identity; scoped service accounts; isolated remote state keys.</td>
-            </tr>
-            <tr>
-              <td><strong>Workload Data Plane</strong></td>
-              <td>Vertex AI Agent Engine, Cloud Run v2, RagManagedDb</td>
-              <td>Host reasoning loops, embed documents, execute agent tools, serve user queries.</td>
-              <td>Private IAM authentication; zero public data ingress without Model Armor mediation.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+            <rect x="430" y="260" width="120" height="100" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1" />
+            <text x="445" y="295" font-family="'Inter', sans-serif" font-size="12" font-weight="700"
+              fill="#60a5fa">Secret Mgr</text>
+            <text x="445" y="315" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">JWT Signing Key</text>
+            <text x="445" y="335" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">GitHub PAT</text>
 
-    <!-- SECTION 4: Zero-Key WIF Model -->
-    <section id="security-iam">
-      <h2>4. Zero-Static-Key Security Architecture</h2>
-      <p>
-        No service account JSON keys are ever generated, committed, or stored. All machine-to-cloud interactions use OIDC tokens exchanged via Google Cloud Workload Identity Federation:
-      </p>
+            <rect x="290" y="380" width="260" height="90" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1" />
+            <text x="305" y="410" font-family="'Inter', sans-serif" font-size="12" font-weight="700"
+              fill="#60a5fa">Callback Receiver (/callbacks/pipeline)</text>
+            <text x="305" y="430" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">• Google OIDC ID Token
+              Verification</text>
+            <text x="305" y="450" font-family="'Inter', sans-serif" font-size="10" fill="#94a3b8">• Monotonic Sequence
+              &amp; Context Binding</text>
 
-      <div class="glass-card">
-        <h3>GitHub OIDC Provider Mapping</h3>
-        <pre><code>gcloud iam workload-identity-pools providers create-oidc github-provider \
+            <!-- EXECUTION PLANE TIER -->
+            <rect x="600" y="30" width="340" height="460" rx="12" fill="url(#grad-pipe)" stroke="#7c3aed"
+              stroke-width="1.5" />
+            <text x="620" y="65" font-family="'Outfit', sans-serif" font-size="16" font-weight="700"
+              fill="#f8fafc">Execution Plane (GitHub Actions + WIF)</text>
+
+            <rect x="620" y="90" width="300" height="110" rx="8" fill="#0f172a" stroke="#8b5cf6" stroke-width="1" />
+            <text x="635" y="115" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#c084fc">Job:
+              plan</text>
+            <text x="635" y="140" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">1. Authenticate via
+              GCP WIF (Keyless)</text>
+            <text x="635" y="160" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">2. Post PLANNING
+              Callback (Seq 1)</text>
+            <text x="635" y="180" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">3. Generate Terraform
+              Plan</text>
+
+            <rect x="620" y="220" width="300" height="140" rx="8" fill="#0f172a" stroke="#8b5cf6" stroke-width="1" />
+            <text x="635" y="245" font-family="'Inter', sans-serif" font-size="13" font-weight="700" fill="#c084fc">Job:
+              apply (Environment Gate)</text>
+            <text x="635" y="270" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">1. Manual Approval
+              Gate (prod env)</text>
+            <text x="635" y="290" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">2. Post APPLYING
+              Callback (Seq 2)</text>
+            <text x="635" y="310" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">3. Terraform Apply to
+              Isolated GCS State</text>
+            <text x="635" y="330" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">4. Run Pre-Activation
+              Smoke Test</text>
+            <text x="635" y="350" font-family="'Inter', sans-serif" font-size="11" fill="#cbd5e1">5. Post SUCCEEDED
+              Callback (Seq 3)</text>
+
+            <rect x="620" y="380" width="300" height="90" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1" />
+            <text x="635" y="410" font-family="'Inter', sans-serif" font-size="13" font-weight="700"
+              fill="#34d399">Target Workload Data Plane</text>
+            <text x="635" y="430" font-family="'Inter', sans-serif" font-size="10" fill="#a7f3d0">T1: Agent Engine · T2:
+              Managed RAG Db</text>
+            <text x="635" y="450" font-family="'Inter', sans-serif" font-size="10" fill="#a7f3d0">T3: Cloud Run v2 · T4:
+              Model Armor &amp; Alerts</text>
+
+            <!-- CONNECTING ARROWS -->
+            <!-- Client -> CP -->
+            <path d="M 220 135 L 290 135" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow)" />
+            <path d="M 220 255 L 290 200" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)" />
+
+            <!-- CP -> Pipeline Dispatch -->
+            <path d="M 550 145 L 620 145" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4" />
+
+            <!-- Pipeline Callback -> CP -->
+            <path d="M 620 330 L 550 425" stroke="#34d399" stroke-width="2" />
+          </svg>
+        </div>
+      </section>
+
+      <!-- SECTION 3: Plane Separation -->
+      <section id="boundaries">
+        <h2>3. Plane Separation & Boundaries</h2>
+        <p>
+          The platform defines strict, non-negotiable boundaries between the three runtime planes:
+        </p>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Plane</th>
+                <th>Technologies</th>
+                <th>Responsibilities</th>
+                <th>Security Constraints</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Control Plane</strong></td>
+                <td>FastAPI, Python 3.11+, Cloud Run, Firestore Native</td>
+                <td>User auth, template catalog, request queuing, concurrency locks, state records, safe telemetry.</td>
+                <td>Zero direct Terraform execution; cannot access data planes; reads secrets via IAM.</td>
+              </tr>
+              <tr>
+                <td><strong>Execution Plane</strong></td>
+                <td>GitHub Actions, WIF, Terraform 1.9+, Google Cloud Storage</td>
+                <td>Checkout immutable templates, plan/apply infrastructure, run smoke tests, post monotonic callbacks.
+                </td>
+                <td>Keyless OIDC identity; scoped service accounts; isolated remote state keys.</td>
+              </tr>
+              <tr>
+                <td><strong>Workload Data Plane</strong></td>
+                <td>Vertex AI Agent Engine, Cloud Run v2, RagManagedDb</td>
+                <td>Host reasoning loops, embed documents, execute agent tools, serve user queries.</td>
+                <td>Private IAM authentication; zero public data ingress without Model Armor mediation.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 4: Zero-Key WIF Model -->
+      <section id="security-iam">
+        <h2>4. Zero-Static-Key Security Architecture</h2>
+        <p>
+          No service account JSON keys are ever generated, committed, or stored. All machine-to-cloud interactions use
+          OIDC tokens exchanged via Google Cloud Workload Identity Federation:
+        </p>
+
+        <div class="glass-card">
+          <h3>GitHub OIDC Provider Mapping</h3>
+          <pre><code>gcloud iam workload-identity-pools providers create-oidc github-provider \
   --location=global \
   --workload-identity-pool=idp-pool \
   --issuer-uri="https://token.actions.githubusercontent.com" \
@@ -582,251 +654,263 @@ google.subject=assertion.sub,\
 attribute.repository=assertion.repository,\
 attribute.ref=assertion.ref,\
 attribute.environment=assertion.environment"</code></pre>
-      </div>
-
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Service Account</th>
-              <th>Execution Context</th>
-              <th>Assigned IAM Roles</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>idp-api-runtime</code></td>
-              <td>Control Plane (Cloud Run)</td>
-              <td><code>roles/datastore.user</code>, <code>roles/secretmanager.secretAccessor</code>, <code>roles/pubsub.publisher</code></td>
-            </tr>
-            <tr>
-              <td><code>idp-pipeline-t1-dev</code></td>
-              <td>GitHub Actions (T1 Dev)</td>
-              <td><code>roles/aiplatform.user</code>, <code>roles/storage.objectAdmin</code> (state prefix only)</td>
-            </tr>
-            <tr>
-              <td><code>idp-pipeline-t2-dev</code></td>
-              <td>GitHub Actions (T2 Dev)</td>
-              <td><code>roles/aiplatform.user</code>, <code>roles/storage.objectViewer</code> (docs bucket)</td>
-            </tr>
-            <tr>
-              <td><code>idp-pipeline-t3-dev</code></td>
-              <td>GitHub Actions (T3 Dev)</td>
-              <td><code>roles/run.admin</code>, <code>roles/iam.serviceAccountUser</code> (target runtime SA only)</td>
-            </tr>
-            <tr>
-              <td><code>idp-pipeline-prod</code></td>
-              <td>GitHub Actions (Prod Gate)</td>
-              <td>Scoped per production template with required GitHub Environment reviewer approval</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SECTION 5: Control Plane Auth -->
-    <section id="auth-control-plane">
-      <h2>5. Control Plane Authentication</h2>
-      <p>
-        Human user authentication is strictly separated from pipeline identity:
-      </p>
-      <div class="grid-2">
-        <div class="glass-card">
-          <h3>Argon2id Password Storage</h3>
-          <p>Passwords are never stored in plaintext or reversible formats. The hasher enforces OWASP-compliant parameters:</p>
-          <ul>
-            <li>Memory cost: 65,536 KiB (64 MiB)</li>
-            <li>Time cost: 3 iterations</li>
-            <li>Parallelism: 4 concurrent threads</li>
-          </ul>
-        </div>
-        <div class="glass-card">
-          <h3>Signed JWT Bearer Tokens</h3>
-          <p>Upon login via <code>POST /auth/login</code>, a cryptographically signed, time-bounded JWT is issued:</p>
-          <ul>
-            <li>Signing Secret: Google Secret Manager (<code>idp-jwt-signing-key</code>)</li>
-            <li>Token Version Revocation: Global or per-user revocation via <code>token_version</code> increment</li>
-            <li>Browser Persistence: Stored in <code>localStorage</code>, cleared on 401</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 6: Pipeline Callback Trust Boundary -->
-    <section id="pipeline-trust">
-      <h2>6. Pipeline Callback Trust Boundary</h2>
-      <p>
-        The callback receiver (<code>POST /callbacks/pipeline</code>) is a zero-trust endpoint that validates execution authenticity:
-      </p>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Validation Layer</th>
-              <th>Mechanism</th>
-              <th>Protection</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Identity Token</strong></td>
-              <td>Google OIDC ID Token issued by <code>accounts.google.com</code></td>
-              <td>Rejects spoofed HTTP calls and human user JWTs.</td>
-            </tr>
-            <tr>
-              <td><strong>Context Binding</strong></td>
-              <td>Matching <code>request_id</code>, <code>deployment_id</code>, <code>template_id</code>, <code>commit_sha</code></td>
-              <td>Prevents pipeline updates from mutating unrelated workloads.</td>
-            </tr>
-            <tr>
-              <td><strong>Monotonic Sequence</strong></td>
-              <td>Sequential counter checks: 1 (PLANNING) &lt; 2 (APPLYING) &lt; 3 (SUCCEEDED)</td>
-              <td>Rejects out-of-order, delayed, or stale pipeline callbacks.</td>
-            </tr>
-            <tr>
-              <td><strong>Replay Tolerance</strong></td>
-              <td>Idempotent duplicate check on identical status</td>
-              <td>Safe handling of network retries without double-execution.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SECTION 7: State Machines & Locking -->
-    <section id="state-machine">
-      <h2>7. State Machines & Concurrency Model</h2>
-      <p>
-        The platform maintains dual coordinated state machines for asynchronous requests and active deployments:
-      </p>
-      
-      <div class="grid-2">
-        <div class="glass-card">
-          <h3>Request State Progression</h3>
-          <code>PENDING → DISPATCHED → PLANNING → APPLYING → SUCCEEDED | FAILED | CANCELLED</code>
-          <p style="margin-top: 12px;">
-            Requests represent the point-in-time asynchronous command submitted by an authorized developer or platform admin.
-          </p>
-        </div>
-        <div class="glass-card">
-          <h3>Deployment State Progression</h3>
-          <code>PENDING → PROVISIONING → ACTIVE → DESTROYING → DESTROYED | FAILED</code>
-          <p style="margin-top: 12px;">
-            Deployments represent the durable cloud workload instance holding active locks, cloud outputs, and TTL expiration dates.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 8: Governed AI Templates -->
-    <section id="templates">
-      <h2>8. Governed AI Workload Templates</h2>
-      <div class="grid-4">
-        <div class="glass-card">
-          <span class="badge badge-blue">T1 Template</span>
-          <h3>Vertex AI Agent Engine</h3>
-          <p>ADK-based autonomous agent packaging deployed to managed Vertex AI Agent Engine reasoning instances.</p>
-          <div style="font-size:0.8rem; color:var(--text-muted);">
-            • Models: Gemini 2.5 Flash/Pro<br>
-            • Readiness: Query Ping Smoke Test
-          </div>
         </div>
 
-        <div class="glass-card">
-          <span class="badge badge-emerald">T2 Template</span>
-          <h3>Managed Vertex AI RAG</h3>
-          <p>Managed vector corpus on RagManagedDb with bounded document ingestion and semantic search.</p>
-          <div style="font-size:0.8rem; color:var(--text-muted);">
-            • Models: text-embedding-004/005<br>
-            • Limits: &le;100 files, &le;500 MB
-          </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Service Account</th>
+                <th>Execution Context</th>
+                <th>Assigned IAM Roles</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>idp-api-runtime</code></td>
+                <td>Control Plane (Cloud Run)</td>
+                <td><code>roles/datastore.user</code>, <code>roles/secretmanager.secretAccessor</code>,
+                  <code>roles/pubsub.publisher</code></td>
+              </tr>
+              <tr>
+                <td><code>idp-pipeline-t1-dev</code></td>
+                <td>GitHub Actions (T1 Dev)</td>
+                <td><code>roles/aiplatform.user</code>, <code>roles/storage.objectAdmin</code> (state prefix only)</td>
+              </tr>
+              <tr>
+                <td><code>idp-pipeline-t2-dev</code></td>
+                <td>GitHub Actions (T2 Dev)</td>
+                <td><code>roles/aiplatform.user</code>, <code>roles/storage.objectViewer</code> (docs bucket)</td>
+              </tr>
+              <tr>
+                <td><code>idp-pipeline-t3-dev</code></td>
+                <td>GitHub Actions (T3 Dev)</td>
+                <td><code>roles/run.admin</code>, <code>roles/iam.serviceAccountUser</code> (target runtime SA only)
+                </td>
+              </tr>
+              <tr>
+                <td><code>idp-pipeline-prod</code></td>
+                <td>GitHub Actions (Prod Gate)</td>
+                <td>Scoped per production template with required GitHub Environment reviewer approval</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </section>
 
-        <div class="glass-card">
-          <span class="badge badge-purple">T3 Template</span>
-          <h3>Cloud Run Agent</h3>
-          <p>Containerized FastAPI + ADK agent runtime with horizontal auto-scaling and private IAM authorization.</p>
-          <div style="font-size:0.8rem; color:var(--text-muted);">
-            • Runtime: Cloud Run v2 (1 CPU, 512Mi)<br>
-            • Access: Zero allUsers, dedicated SA
-          </div>
-        </div>
-
-        <div class="glass-card">
-          <span class="badge badge-amber">T4 Template</span>
-          <h3>Governance Controls</h3>
-          <p>Model Armor guardrails (Block, Redact, Audit), Cloud Monitoring metric alerts, and automated TTL cleanup.</p>
-          <div style="font-size:0.8rem; color:var(--text-muted);">
-            • Filters: PII, Jailbreaks, Injections<br>
-            • Lifecycle: Default 7-day Dev TTL
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 9: Production Gates & Alerts -->
-    <section id="production-gate">
-      <h2>9. Production Gates & Notifications</h2>
-      <p>
-        Workload promotion to production is protected by role authorization, pipeline environment reviewer gates, and Pub/Sub notifications:
-      </p>
-      <div class="glass-card">
-        <h3>Dual-Stage Workflow with GitHub Environment Gate</h3>
+      <!-- SECTION 5: Control Plane Auth -->
+      <section id="auth-control-plane">
+        <h2>5. Control Plane Authentication</h2>
         <p>
-          Workflows are divided into <code>plan</code> and <code>apply</code> jobs. When <code>environment == 'prod'</code>, the apply job targets GitHub Environment <code>prod</code>, requiring authorized manual approval before applying infrastructure changes:
+          Human user authentication is strictly separated from pipeline identity:
         </p>
-        <pre><code>apply:
+        <div class="grid-2">
+          <div class="glass-card">
+            <h3>Argon2id Password Storage</h3>
+            <p>Passwords are never stored in plaintext or reversible formats. The hasher enforces OWASP-compliant
+              parameters:</p>
+            <ul>
+              <li>Memory cost: 65,536 KiB (64 MiB)</li>
+              <li>Time cost: 3 iterations</li>
+              <li>Parallelism: 4 concurrent threads</li>
+            </ul>
+          </div>
+          <div class="glass-card">
+            <h3>Signed JWT Bearer Tokens</h3>
+            <p>Upon login via <code>POST /auth/login</code>, a cryptographically signed, time-bounded JWT is issued:</p>
+            <ul>
+              <li>Signing Secret: Google Secret Manager (<code>idp-jwt-signing-key</code>)</li>
+              <li>Token Version Revocation: Global or per-user revocation via <code>token_version</code> increment</li>
+              <li>Browser Persistence: Stored in <code>localStorage</code>, cleared on 401</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: Pipeline Callback Trust Boundary -->
+      <section id="pipeline-trust">
+        <h2>6. Pipeline Callback Trust Boundary</h2>
+        <p>
+          The callback receiver (<code>POST /callbacks/pipeline</code>) is a zero-trust endpoint that validates
+          execution authenticity:
+        </p>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Validation Layer</th>
+                <th>Mechanism</th>
+                <th>Protection</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Identity Token</strong></td>
+                <td>Google OIDC ID Token issued by <code>accounts.google.com</code></td>
+                <td>Rejects spoofed HTTP calls and human user JWTs.</td>
+              </tr>
+              <tr>
+                <td><strong>Context Binding</strong></td>
+                <td>Matching <code>request_id</code>, <code>deployment_id</code>, <code>template_id</code>,
+                  <code>commit_sha</code></td>
+                <td>Prevents pipeline updates from mutating unrelated workloads.</td>
+              </tr>
+              <tr>
+                <td><strong>Monotonic Sequence</strong></td>
+                <td>Sequential counter checks: 1 (PLANNING) &lt; 2 (APPLYING) &lt; 3 (SUCCEEDED)</td>
+                <td>Rejects out-of-order, delayed, or stale pipeline callbacks.</td>
+              </tr>
+              <tr>
+                <td><strong>Replay Tolerance</strong></td>
+                <td>Idempotent duplicate check on identical status</td>
+                <td>Safe handling of network retries without double-execution.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 7: State Machines & Locking -->
+      <section id="state-machine">
+        <h2>7. State Machines & Concurrency Model</h2>
+        <p>
+          The platform maintains dual coordinated state machines for asynchronous requests and active deployments:
+        </p>
+
+        <div class="grid-2">
+          <div class="glass-card">
+            <h3>Request State Progression</h3>
+            <code>PENDING → DISPATCHED → PLANNING → APPLYING → SUCCEEDED | FAILED | CANCELLED</code>
+            <p style="margin-top: 12px;">
+              Requests represent the point-in-time asynchronous command submitted by an authorized developer or platform
+              admin.
+            </p>
+          </div>
+          <div class="glass-card">
+            <h3>Deployment State Progression</h3>
+            <code>PENDING → PROVISIONING → ACTIVE → DESTROYING → DESTROYED | FAILED</code>
+            <p style="margin-top: 12px;">
+              Deployments represent the durable cloud workload instance holding active locks, cloud outputs, and TTL
+              expiration dates.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 8: Governed AI Templates -->
+      <section id="templates">
+        <h2>8. Governed AI Workload Templates</h2>
+        <div class="grid-4">
+          <div class="glass-card">
+            <span class="badge badge-blue">T1 Template</span>
+            <h3>Vertex AI Agent Engine</h3>
+            <p>ADK-based autonomous agent packaging deployed to managed Vertex AI Agent Engine reasoning instances.</p>
+            <div style="font-size:0.8rem; color:var(--text-muted);">
+              • Models: Gemini 2.5 Flash/Pro<br>
+              • Readiness: Query Ping Smoke Test
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <span class="badge badge-emerald">T2 Template</span>
+            <h3>Managed Vertex AI RAG</h3>
+            <p>Managed vector corpus on RagManagedDb with bounded document ingestion and semantic search.</p>
+            <div style="font-size:0.8rem; color:var(--text-muted);">
+              • Models: text-embedding-004/005<br>
+              • Limits: &le;100 files, &le;500 MB
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <span class="badge badge-purple">T3 Template</span>
+            <h3>Cloud Run Agent</h3>
+            <p>Containerized FastAPI + ADK agent runtime with horizontal auto-scaling and private IAM authorization.</p>
+            <div style="font-size:0.8rem; color:var(--text-muted);">
+              • Runtime: Cloud Run v2 (1 CPU, 512Mi)<br>
+              • Access: Zero allUsers, dedicated SA
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <span class="badge badge-amber">T4 Template</span>
+            <h3>Governance Controls</h3>
+            <p>Model Armor guardrails (Block, Redact, Audit), Cloud Monitoring metric alerts, and automated TTL cleanup.
+            </p>
+            <div style="font-size:0.8rem; color:var(--text-muted);">
+              • Filters: PII, Jailbreaks, Injections<br>
+              • Lifecycle: Default 7-day Dev TTL
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 9: Production Gates & Alerts -->
+      <section id="production-gate">
+        <h2>9. Production Gates & Notifications</h2>
+        <p>
+          Workload promotion to production is protected by role authorization, pipeline environment reviewer gates, and
+          Pub/Sub notifications:
+        </p>
+        <div class="glass-card">
+          <h3>Dual-Stage Workflow with GitHub Environment Gate</h3>
+          <p>
+            Workflows are divided into <code>plan</code> and <code>apply</code> jobs. When
+            <code>environment == 'prod'</code>, the apply job targets GitHub Environment <code>prod</code>, requiring
+            authorized manual approval before applying infrastructure changes:
+          </p>
+          <pre><code>apply:
   name: Terraform Apply &amp; Readiness Gate
   needs: [plan]
   runs-on: ubuntu-latest
   environment: ${{ github.event.inputs.environment }} # Gates prod with reviewers</code></pre>
-      </div>
-    </section>
+        </div>
+      </section>
 
-    <!-- SECTION 10: Verification & Testing -->
-    <section id="verification">
-      <h2>10. Quality Gates & Test Verification</h2>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Test Layer</th>
-              <th>Scope</th>
-              <th>Passing Tests</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Unit Tests</strong></td>
-              <td>Argon2id hasher, JWT generation, SHA-256 idempotency, state transitions</td>
-              <td>23 Passed</td>
-            </tr>
-            <tr>
-              <td><strong>API Integration</strong></td>
-              <td>Auth routes, template catalog, lifecycle requests, locking, reconciliation</td>
-              <td>33 Passed</td>
-            </tr>
-            <tr>
-              <td><strong>Template Contracts</strong></td>
-              <td>T1, T2, T3, and T4 manifests, smoke tests, Model Armor filters</td>
-              <td>18 Passed</td>
-            </tr>
-            <tr>
-              <td><strong>CLI Client</strong></td>
-              <td>Login, template listing, request creation, governance inspection</td>
-              <td>5 Passed</td>
-            </tr>
-            <tr>
-              <td><strong>Total Quality Gate</strong></td>
-              <td><strong>Full test pyramid coverage across entire codebase</strong></td>
-              <td><strong style="color:var(--accent-emerald);">74 / 74 PASSED (100%)</strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-</div>
+      <!-- SECTION 10: Verification & Testing -->
+      <section id="verification">
+        <h2>10. Quality Gates & Test Verification</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Test Layer</th>
+                <th>Scope</th>
+                <th>Passing Tests</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Unit Tests</strong></td>
+                <td>Argon2id hasher, JWT generation, SHA-256 idempotency, state transitions</td>
+                <td>23 Passed</td>
+              </tr>
+              <tr>
+                <td><strong>API Integration</strong></td>
+                <td>Auth routes, template catalog, lifecycle requests, locking, reconciliation</td>
+                <td>33 Passed</td>
+              </tr>
+              <tr>
+                <td><strong>Template Contracts</strong></td>
+                <td>T1, T2, T3, and T4 manifests, smoke tests, Model Armor filters</td>
+                <td>18 Passed</td>
+              </tr>
+              <tr>
+                <td><strong>CLI Client</strong></td>
+                <td>Login, template listing, request creation, governance inspection</td>
+                <td>5 Passed</td>
+              </tr>
+              <tr>
+                <td><strong>Total Quality Gate</strong></td>
+                <td><strong>Full test pyramid coverage across entire codebase</strong></td>
+                <td><strong style="color:var(--accent-emerald);">74 / 74 PASSED (100%)</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
 
 </body>
+
 </html>

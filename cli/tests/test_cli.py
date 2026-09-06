@@ -110,3 +110,36 @@ def test_cli_governance_inspect():
         result = runner.invoke(cli, ["governance", "inspect", "Hello agent"])
         assert result.exit_code == 0
         assert "Passed:       True" in result.output
+
+
+def test_cli_deployment_config():
+    runner = CliRunner()
+    with patch("cli.idp.main.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_res = MagicMock()
+        mock_res.status_code = 200
+        mock_res.json.return_value = {
+            "deployment_id": "dep-123",
+            "safe_config": {
+                "deployment_id": "dep-123",
+                "workspace": "ws-dev",
+                "environment": "dev",
+                "project_id": "mybrightday-dev",
+                "template_id": "t1-agent-engine",
+                "template_version": "2.0.0",
+                "status": "ACTIVE",
+                "outputs": {
+                    "runtime_sa_email": "sa-t1-xyz@mybrightday-dev.iam.gserviceaccount.com",
+                    "model_name": "gemini-2.5-flash",
+                    "region": "us-central1",
+                },
+            },
+        }
+        mock_client.get.return_value = mock_res
+        mock_get_client.return_value = (mock_client, "http://test")
+
+        result = runner.invoke(cli, ["deployments", "config", "dep-123"])
+        assert result.exit_code == 0
+        assert "dep-123" in result.output
+        assert "sa-t1-xyz" in result.output
+        assert "gemini-2.5-flash" in result.output
