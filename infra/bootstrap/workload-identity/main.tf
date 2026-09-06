@@ -23,8 +23,8 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
     "attribute.workflow"         = "assertion.workflow"
   }
 
-  # Restrict token exchange strictly to the designated repository
-  attribute_condition = "assertion.repository == '${var.github_repository}'"
+  # Restrict token exchange strictly to the designated repository and protected main branch
+  attribute_condition = "assertion.repository == '${var.github_repository}' && assertion.ref == 'refs/heads/main'"
 
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"

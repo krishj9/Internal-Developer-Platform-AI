@@ -7,7 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from api.app.auth.jwt import TokenExpiredError, TokenInvalidError, decode_access_token
 from api.app.auth.models import TokenPayload
-from api.app.repositories.user_repository import UserRecord, UserRepository, user_repo
+from api.app.repositories.user_repository import UserRecord, UserRepository, get_user_repo
 
 security_scheme = HTTPBearer(auto_error=False)
 
@@ -44,7 +44,7 @@ async def get_current_token_payload(
 
 async def get_current_user(
     token_payload: TokenPayload = Depends(get_current_token_payload),
-    repository: UserRepository = Depends(lambda: user_repo),
+    repository: UserRepository = Depends(get_user_repo),
 ) -> UserRecord:
     """
     Verify user exists, is active, and token_version has not been revoked.

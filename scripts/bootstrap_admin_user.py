@@ -48,6 +48,10 @@ def main():
     parser.add_argument("--username", default="admin", help="Admin username (default: admin)")
     parser.add_argument("--email", default="admin@example.com", help="Admin email")
     parser.add_argument("--password", help="Admin password (will prompt securely if omitted)")
+    parser.add_argument("--project", default="mybrightday-dev", help="GCP Project ID")
+    parser.add_argument(
+        "--database", default="idp-db", help="Firestore database ID (default: idp-db)"
+    )
     parser.add_argument(
         "--save-firestore",
         action="store_true",
@@ -67,18 +71,32 @@ def main():
     payload = create_admin_payload(args.username, args.email, password)
 
     if args.save_firestore:
+        import subprocess
+
         from google.api_core.exceptions import GoogleAPIError
         from google.cloud import firestore
+        from google.oauth2 import credentials
 
         try:
-            db = firestore.Client()
+            # Attempt to use access token from gcloud if default ADC fails
+            try:
+                db = firestore.Client(project=args.project, database=args.database)
+            except Exception:
+                token = subprocess.check_output(
+                    ["gcloud", "auth", "print-access-token"], text=True
+                ).strip()
+                creds = credentials.Credentials(token)
+                db = firestore.Client(
+                    project=args.project, database=args.database, credentials=creds
+                )
+
             doc_ref = db.collection("users").document(payload["user_id"])
             doc_ref.set(payload)
             print(
-                f"Successfully seeded admin user '{args.username}' in Firestore "
-                f"(ID: {payload['user_id']})"
+                f"Successfully seeded admin user '{args.username}' in "
+                f"Firestore database '{args.database}' (ID: {payload['user_id']})"
             )
-        except GoogleAPIError as e:
+        except (GoogleAPIError, Exception) as e:
             print(f"Failed to write to Firestore: {e}", file=sys.stderr)
             sys.exit(1)
     else:

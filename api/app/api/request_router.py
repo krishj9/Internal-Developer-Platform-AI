@@ -21,10 +21,10 @@ from api.app.repositories.platform_repositories import (
     DeploymentRepository,
     RequestRepository,
     TemplateRepository,
-    audit_repo,
-    deployment_repo,
-    request_repo,
-    template_repo,
+    get_audit_repo,
+    get_deployment_repo,
+    get_request_repo,
+    get_template_repo,
 )
 from api.app.repositories.user_repository import UserRecord
 from api.app.services.github_dispatch_service import GitHubDispatchService, github_dispatcher
@@ -56,10 +56,10 @@ async def create_request(
         ..., alias="Idempotency-Key", description="Unique client key with 24h TTL"
     ),
     current_user: UserRecord = Depends(get_current_user),
-    templates: TemplateRepository = Depends(lambda: template_repo),
-    deployments: DeploymentRepository = Depends(lambda: deployment_repo),
-    requests: RequestRepository = Depends(lambda: request_repo),
-    audits: AuditEventRepository = Depends(lambda: audit_repo),
+    templates: TemplateRepository = Depends(get_template_repo),
+    deployments: DeploymentRepository = Depends(get_deployment_repo),
+    requests: RequestRepository = Depends(get_request_repo),
+    audits: AuditEventRepository = Depends(get_audit_repo),
     dispatcher: GitHubDispatchService = Depends(lambda: github_dispatcher),
     idempotency: IdempotencyService = Depends(lambda: idempotency_service),
     notifications: NotificationService = Depends(lambda: notification_service),
@@ -264,7 +264,7 @@ async def create_request(
 async def get_request(
     request_id: str,
     current_user: UserRecord = Depends(get_current_user),
-    requests: RequestRepository = Depends(lambda: request_repo),
+    requests: RequestRepository = Depends(get_request_repo),
 ) -> RequestResponse:
     req = await requests.get(request_id)
     if not req:

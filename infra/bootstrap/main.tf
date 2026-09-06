@@ -54,6 +54,7 @@ module "firestore" {
   source      = "./firestore"
   project_id  = var.project_id
   location_id = var.firestore_location_id
+  database_id = var.firestore_database_id
 
   depends_on = [google_project_service.services]
 }

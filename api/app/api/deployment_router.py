@@ -20,9 +20,9 @@ from api.app.repositories.platform_repositories import (
     AuditEventRepository,
     DeploymentRepository,
     RequestRepository,
-    audit_repo,
-    deployment_repo,
-    request_repo,
+    get_audit_repo,
+    get_deployment_repo,
+    get_request_repo,
 )
 from api.app.repositories.user_repository import UserRecord
 from api.app.services.github_dispatch_service import GitHubDispatchService, github_dispatcher
@@ -44,7 +44,7 @@ router = APIRouter(prefix="/deployments", tags=["Deployments"])
 )
 async def list_deployments(
     current_user: UserRecord = Depends(get_current_user),
-    deployments: DeploymentRepository = Depends(lambda: deployment_repo),
+    deployments: DeploymentRepository = Depends(get_deployment_repo),
 ) -> list[DeploymentResponse]:
     all_deployments: list[DeploymentResponse] = []
     for ws in current_user.workspaces:
@@ -77,7 +77,7 @@ async def list_deployments(
 async def get_deployment(
     deployment_id: str,
     current_user: UserRecord = Depends(get_current_user),
-    deployments: DeploymentRepository = Depends(lambda: deployment_repo),
+    deployments: DeploymentRepository = Depends(get_deployment_repo),
 ) -> DeploymentResponse:
     dep = await deployments.get(deployment_id)
     if not dep:
@@ -116,7 +116,7 @@ async def get_deployment(
 async def get_deployment_config(
     deployment_id: str,
     current_user: UserRecord = Depends(get_current_user),
-    deployments: DeploymentRepository = Depends(lambda: deployment_repo),
+    deployments: DeploymentRepository = Depends(get_deployment_repo),
 ) -> DeploymentConfigResponse:
     dep = await deployments.get(deployment_id)
     if not dep:
@@ -162,9 +162,9 @@ async def destroy_deployment(
     deployment_id: str,
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
     current_user: UserRecord = Depends(get_current_user),
-    deployments: DeploymentRepository = Depends(lambda: deployment_repo),
-    requests: RequestRepository = Depends(lambda: request_repo),
-    audits: AuditEventRepository = Depends(lambda: audit_repo),
+    deployments: DeploymentRepository = Depends(get_deployment_repo),
+    requests: RequestRepository = Depends(get_request_repo),
+    audits: AuditEventRepository = Depends(get_audit_repo),
     dispatcher: GitHubDispatchService = Depends(lambda: github_dispatcher),
     idempotency: IdempotencyService = Depends(lambda: idempotency_service),
 ) -> RequestResponse:

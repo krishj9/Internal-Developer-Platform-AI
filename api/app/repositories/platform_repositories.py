@@ -315,9 +315,59 @@ class InMemoryIdempotencyRepository(IdempotencyRepository):
 
 
 # Global singletons
-template_repo = InMemoryTemplateRepository()
-deployment_repo = InMemoryDeploymentRepository()
-request_repo = InMemoryRequestRepository()
-callback_repo = InMemoryCallbackEventRepository()
-audit_repo = InMemoryAuditEventRepository()
-idempotency_repo = InMemoryIdempotencyRepository()
+template_repo: TemplateRepository = InMemoryTemplateRepository()
+deployment_repo: DeploymentRepository = InMemoryDeploymentRepository()
+request_repo: RequestRepository = InMemoryRequestRepository()
+callback_repo: CallbackEventRepository = InMemoryCallbackEventRepository()
+audit_repo: AuditEventRepository = InMemoryAuditEventRepository()
+idempotency_repo: IdempotencyRepository = InMemoryIdempotencyRepository()
+
+
+def get_template_repo() -> TemplateRepository:
+    return template_repo
+
+
+def get_deployment_repo() -> DeploymentRepository:
+    return deployment_repo
+
+
+def get_request_repo() -> RequestRepository:
+    return request_repo
+
+
+def get_callback_repo() -> CallbackEventRepository:
+    return callback_repo
+
+
+def get_audit_repo() -> AuditEventRepository:
+    return audit_repo
+
+
+def get_idempotency_repo() -> IdempotencyRepository:
+    return idempotency_repo
+
+
+def init_firestore_repositories(project_id: str, database: str) -> None:
+    """Initialize and bind production Firestore repository singletons."""
+    global template_repo, deployment_repo, request_repo, callback_repo, audit_repo, idempotency_repo
+    from google.cloud import firestore
+
+    import api.app.repositories.user_repository as u_mod
+    from api.app.repositories.firestore_repositories import (
+        FirestoreAuditEventRepository,
+        FirestoreCallbackEventRepository,
+        FirestoreDeploymentRepository,
+        FirestoreIdempotencyRepository,
+        FirestoreRequestRepository,
+        FirestoreTemplateRepository,
+        FirestoreUserRepository,
+    )
+
+    db = firestore.AsyncClient(project=project_id, database=database)
+    u_mod.user_repo = FirestoreUserRepository(db)
+    template_repo = FirestoreTemplateRepository(db)
+    deployment_repo = FirestoreDeploymentRepository(db)
+    request_repo = FirestoreRequestRepository(db)
+    callback_repo = FirestoreCallbackEventRepository(db)
+    audit_repo = FirestoreAuditEventRepository(db)
+    idempotency_repo = FirestoreIdempotencyRepository(db)

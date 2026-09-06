@@ -42,6 +42,37 @@ class Settings(BaseSettings):
     # Secret Manager Secret IDs
     SECRET_ID_JWT_SIGNING_KEY: str = "idp-jwt-signing-key"
     SECRET_ID_GITHUB_DISPATCH_TOKEN: str = "idp-github-dispatch-token"
+    USE_SECRET_MANAGER: bool = False
+
+    # Firestore Database Configuration
+    USE_FIRESTORE: bool = False
+    FIRESTORE_DATABASE: str = "idp-db"
+
+
+def load_secret_manager_secrets(cfg: Settings) -> None:
+    """Optionally load runtime secrets directly from GCP Secret Manager."""
+    if not cfg.USE_SECRET_MANAGER:
+        return
+
+    try:
+        from google.cloud import secretmanager
+
+        client = secretmanager.SecretManagerServiceClient()
+        sec_name = (
+            f"projects/{cfg.PROJECT_ID}/secrets/{cfg.SECRET_ID_JWT_SIGNING_KEY}/versions/latest"
+        )
+        response = client.access_secret_version(request={"name": sec_name})
+        secret_val = response.payload.data.decode("utf-8").strip()
+        if secret_val:
+            cfg.JWT_SECRET_KEY = secret_val
+    except Exception as e:
+        # Fallback to local default with warning if running in non-GCP environment
+        print(
+            f"Warning: Could not load secret '{cfg.SECRET_ID_JWT_SIGNING_KEY}' "
+            f"from Secret Manager: {e}"
+        )
 
 
 settings = Settings()
+if settings.USE_SECRET_MANAGER:
+    load_secret_manager_secrets(settings)

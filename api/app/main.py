@@ -16,11 +16,14 @@ from api.app.api.request_router import router as request_router
 from api.app.api.template_router import router as template_router
 from api.app.core.settings import settings
 from api.app.domain.models import TemplateRecord
-from api.app.repositories.platform_repositories import template_repo
+from api.app.repositories.platform_repositories import init_firestore_repositories, template_repo
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if settings.USE_FIRESTORE:
+        init_firestore_repositories(settings.PROJECT_ID, settings.FIRESTORE_DATABASE)
+
     # Seed default T1 template if not already present
     t1 = await template_repo.get("t1-agent-engine", "2.0.0")
     if not t1:

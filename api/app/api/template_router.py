@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 
 from api.app.api.schemas import TemplateResponse
 from api.app.auth.dependencies import get_current_user
-from api.app.repositories.platform_repositories import TemplateRepository, template_repo
+from api.app.repositories.platform_repositories import TemplateRepository, get_template_repo
 from api.app.repositories.user_repository import UserRecord
 
 router = APIRouter(prefix="/templates", tags=["Templates"])
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/templates", tags=["Templates"])
 )
 async def list_templates(
     current_user: UserRecord = Depends(get_current_user),
-    repository: TemplateRepository = Depends(lambda: template_repo),
+    repository: TemplateRepository = Depends(get_template_repo),
 ) -> list[TemplateResponse]:
     templates = await repository.list_published()
     return [

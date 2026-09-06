@@ -17,10 +17,10 @@ from api.app.repositories.platform_repositories import (
     CallbackEventRepository,
     DeploymentRepository,
     RequestRepository,
-    audit_repo,
-    callback_repo,
-    deployment_repo,
-    request_repo,
+    get_audit_repo,
+    get_callback_repo,
+    get_deployment_repo,
+    get_request_repo,
 )
 from api.app.repositories.user_repository import UserRecord
 from api.app.services.notification_service import (
@@ -46,10 +46,10 @@ class ReconcileRequestInput(BaseModel):
 async def reconcile_callbacks(
     input_data: ReconcileRequestInput,
     current_user: UserRecord = Depends(get_current_user),
-    requests: RequestRepository = Depends(lambda: request_repo),
-    deployments: DeploymentRepository = Depends(lambda: deployment_repo),
-    callbacks: CallbackEventRepository = Depends(lambda: callback_repo),
-    audits: AuditEventRepository = Depends(lambda: audit_repo),
+    requests: RequestRepository = Depends(get_request_repo),
+    deployments: DeploymentRepository = Depends(get_deployment_repo),
+    callbacks: CallbackEventRepository = Depends(get_callback_repo),
+    audits: AuditEventRepository = Depends(get_audit_repo),
     notifications: NotificationService = Depends(lambda: notification_service),
 ) -> ReconcileResponse:
     # 1. Admin Role Authorization

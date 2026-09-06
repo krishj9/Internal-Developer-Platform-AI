@@ -31,6 +31,12 @@ variable "firestore_location_id" {
   description = "Firestore database multi-region / location"
 }
 
+variable "firestore_database_id" {
+  type        = string
+  default     = "idp-db"
+  description = "Firestore database ID (allows named databases when default is in Datastore mode)"
+}
+
 variable "labels" {
   type = map(string)
   default = {

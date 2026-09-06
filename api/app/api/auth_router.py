@@ -8,7 +8,7 @@ from api.app.auth.dependencies import get_current_user
 from api.app.auth.hasher import verify_password
 from api.app.auth.jwt import create_access_token
 from api.app.auth.models import LoginRequest, TokenResponse, UserResponse
-from api.app.repositories.user_repository import UserRecord, UserRepository, user_repo
+from api.app.repositories.user_repository import UserRecord, UserRepository, get_user_repo
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 )
 async def login(
     req: LoginRequest,
-    repository: UserRepository = Depends(lambda: user_repo),
+    repository: UserRepository = Depends(get_user_repo),
 ) -> TokenResponse:
     """
     Authenticate user and issue JWT access token.

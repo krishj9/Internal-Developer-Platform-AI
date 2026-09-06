@@ -54,4 +54,9 @@ class InMemoryUserRepository(UserRepository):
 
 
 # Global singleton instance for local/test defaults (can be overridden via dependency injection)
-user_repo = InMemoryUserRepository()
+user_repo: UserRepository = InMemoryUserRepository()
+
+
+def get_user_repo() -> UserRepository:
+    """Dependency getter returning current user repository instance."""
+    return user_repo
