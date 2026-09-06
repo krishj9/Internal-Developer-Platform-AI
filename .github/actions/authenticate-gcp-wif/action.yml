@@ -1,0 +1,32 @@
+name: "Authenticate GCP via Workload Identity Federation"
+description: "Authenticates GitHub Actions runner to GCP using keyless OIDC and WIF"
+
+inputs:
+  workload_identity_provider:
+    description: "Full resource name of the Workload Identity Provider"
+    required: true
+  service_account:
+    description: "Email of the GCP service account to impersonate"
+    required: true
+  id_token_audience:
+    description: "Audience for Google ID token generation (e.g. Cloud Run API URL for callbacks)"
+    required: false
+    default: ""
+
+outputs:
+  id_token:
+    description: "Minted Google ID token (if id_token_audience was provided)"
+    value: ${{ steps.auth.outputs.id_token }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.workload_identity_provider }}
+        service_account: ${{ inputs.service_account }}
+        id_token_audience: ${{ inputs.id_token_audience }}
+        id_token_include_email: true
+        token_format: "access_token"

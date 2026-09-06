@@ -1,0 +1,69 @@
+name: "Post Pipeline Callback"
+description: "Posts trusted lifecycle callback to FastAPI with exponential backoff and GCS dead-letter fallback"
+
+inputs:
+  callback_url:
+    description: "Full URL to FastAPI callback endpoint (e.g. https://api.domain.com/callbacks/pipeline)"
+    required: true
+  id_token:
+    description: "Google OIDC ID token for Cloud Run authentication"
+    required: true
+  payload_json:
+    description: "Validated callback payload JSON"
+    required: true
+  state_bucket:
+    description: "GCS state bucket for dead-letter persistence if callback fails"
+    required: true
+  request_id:
+    description: "Correlation request ID"
+    required: true
+  github_run_id:
+    description: "GitHub Actions run ID"
+    required: true
+  event_sequence:
+    description: "Monotonic sequence number for callback event"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Deliver Callback with Exponential Retries
+      id: deliver_callback
+      shell: bash
+      run: |
+        CALLBACK_URL="${{ inputs.callback_url }}"
+        ID_TOKEN="${{ inputs.id_token }}"
+        PAYLOAD='${{ inputs.payload_json }}'
+        MAX_RETRIES=3
+        DELAY=2
+        SUCCESS=false
+
+        for i in $(seq 1 $MAX_RETRIES); do
+          echo "Attempting callback delivery (Attempt $i of $MAX_RETRIES) to $CALLBACK_URL..."
+          HTTP_STATUS=$(curl -s -o /tmp/callback_response.txt -w "%{http_code}" \
+            -X POST "$CALLBACK_URL" \
+            -H "Authorization: Bearer $ID_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "Callback delivered successfully (HTTP $HTTP_STATUS)."
+            SUCCESS=true
+            break
+          else
+            echo "Callback delivery failed with HTTP status $HTTP_STATUS: $(cat /tmp/callback_response.txt)"
+            if [ "$i" -lt "$MAX_RETRIES" ]; then
+              echo "Waiting $DELAY seconds before retry..."
+              sleep $DELAY
+              DELAY=$((DELAY * 2))
+            fi
+          fi
+        done
+
+        if [ "$SUCCESS" != "true" ]; then
+          echo "All $MAX_RETRIES callback attempts failed. Writing to dead-letter storage in GCS..."
+          DEAD_LETTER_PATH="gs://${{ inputs.state_bucket }}/callbacks/dead-letter/${{ inputs.request_id }}/${{ inputs.github_run_id }}/${{ inputs.event_sequence }}.json"
+          echo "$PAYLOAD" > /tmp/dead_letter.json
+          gcloud storage cp /tmp/dead_letter.json "$DEAD_LETTER_PATH"
+          echo "Dead-letter record persisted at $DEAD_LETTER_PATH"
+        fi

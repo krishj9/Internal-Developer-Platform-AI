@@ -1,0 +1,89 @@
+name: "Terraform Lifecycle Action"
+description: "Executes Terraform init, validate, plan, apply, or destroy with an isolated remote state key"
+
+inputs:
+  working_directory:
+    description: "Directory containing Terraform configuration"
+    required: true
+  state_bucket:
+    description: "GCS bucket name for remote Terraform state"
+    required: true
+  state_key:
+    description: "Isolated state key path (e.g. templates/t1-agent-engine/dep-123/terraform.tfstate)"
+    required: true
+  operation:
+    description: "Operation to execute: 'plan', 'apply', or 'destroy'"
+    required: true
+  var_file_content:
+    description: "JSON string containing terraform variables"
+    required: false
+    default: "{}"
+
+outputs:
+  raw_outputs_json:
+    description: "JSON string of non-sensitive Terraform outputs"
+    value: ${{ steps.extract_outputs.outputs.json }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure GCS Backend
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        cat <<EOF > backend_override.tf
+        terraform {
+          backend "gcs" {
+            bucket = "${{ inputs.state_bucket }}"
+            prefix = "${{ inputs.state_key }}"
+          }
+        }
+        EOF
+
+    - name: Write Variables File
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        echo '${{ inputs.var_file_content }}' > terraform.tfvars.json
+
+    - name: Initialize Terraform
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        terraform init -input=false -reconfigure
+
+    - name: Validate Terraform
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        terraform validate
+
+    - name: Execute Terraform Plan
+      if: inputs.operation == 'plan'
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        terraform plan -input=false
+
+    - name: Execute Terraform Apply
+      if: inputs.operation == 'apply'
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        terraform apply -input=false -auto-approve
+
+    - name: Execute Terraform Destroy
+      if: inputs.operation == 'destroy'
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        terraform destroy -input=false -auto-approve
+
+    - name: Extract Non-Sensitive Outputs
+      id: extract_outputs
+      if: inputs.operation == 'apply'
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        OUTPUT_JSON=$(terraform output -json | jq -c '.')
+        echo "json=${OUTPUT_JSON}" >> $GITHUB_OUTPUT

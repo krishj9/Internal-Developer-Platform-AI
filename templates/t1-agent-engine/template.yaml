@@ -1,0 +1,74 @@
+id: t1-agent-engine
+version: 2.0.0
+display_name: Agent on Vertex AI Agent Engine
+description: Governed ADK-based agent deployed to Google Cloud Vertex AI Agent Engine.
+supported_environments:
+  - dev
+
+inputs:
+  type: object
+  additionalProperties: false
+  properties:
+    agent_name:
+      type: string
+      pattern: "^[a-z0-9-]+$"
+      minLength: 3
+      maxLength: 30
+      description: Logical identifier for the agent
+    model_name:
+      type: string
+      enum:
+        - gemini-2.5-flash
+        - gemini-2.5-pro
+      description: Approved foundational model for the agent
+    region:
+      type: string
+      enum:
+        - us-central1
+      description: Approved GCP region for deployment
+    description:
+      type: string
+      maxLength: 100
+      description: Brief description of the agent capability
+  required:
+    - agent_name
+    - model_name
+    - region
+
+defaults:
+  model_name: gemini-2.5-flash
+  region: us-central1
+  description: Default ADK Agent on Agent Engine
+
+constraints:
+  allowed_models:
+    - gemini-2.5-flash
+    - gemini-2.5-pro
+  allowed_regions:
+    - us-central1
+  resource_limits:
+    max_deployments_per_workspace: 5
+  allowed_workspaces:
+    - default
+    - ws-dev
+
+cost_tier: low
+
+readiness:
+  type: smoke_test
+  description: Deterministic verification prompt sent to deployed agent endpoint to verify 200 OK and valid response structure.
+  smoke_script: agent/smoke_test.py
+
+output_contract:
+  allowed_outputs:
+    - deployment_id
+    - agent_name
+    - agent_engine_resource_id
+    - model_name
+    - region
+    - status
+
+lifecycle:
+  supports_create: true
+  supports_destroy: true
+  retention_notes: Agent Engine reasoning engine resource and dedicated service account bindings are fully deleted on destroy.

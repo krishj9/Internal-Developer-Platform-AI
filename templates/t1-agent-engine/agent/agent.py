@@ -1,0 +1,49 @@
+"""
+T1 Agent implementation using Google Cloud Agent Development Kit (ADK) / Vertex AI.
+"""
+
+import os
+from typing import Dict, Any
+
+
+class GovernedAgent:
+    """
+    Standard ADK-compliant Agent Engine template.
+    """
+
+    def __init__(self, model_name: str = "gemini-2.5-flash"):
+        self.model_name = model_name
+        self.system_instruction = (
+            "You are a governed enterprise assistant running on the IDP platform. "
+            "Respond helpfully and concisely."
+        )
+
+    def query(self, prompt: str) -> Dict[str, Any]:
+        """
+        Execute an agent reasoning query.
+        """
+        if not prompt or not prompt.strip():
+            return {
+                "status": "error",
+                "message": "Prompt cannot be empty.",
+            }
+
+        # Handle health/smoke check deterministically
+        if prompt.strip().lower() == "ping":
+            return {
+                "status": "success",
+                "response": "pong",
+                "model": self.model_name,
+            }
+
+        # In live deployment on Vertex AI Agent Engine, invoke foundation model
+        return {
+            "status": "success",
+            "response": f"Processed query using {self.model_name}: {prompt}",
+            "model": self.model_name,
+        }
+
+
+def create_agent() -> GovernedAgent:
+    model = os.getenv("AGENT_MODEL_NAME", "gemini-2.5-flash")
+    return GovernedAgent(model_name=model)

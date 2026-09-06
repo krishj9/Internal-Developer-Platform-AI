@@ -1,0 +1,22 @@
+name: "Run Readiness Test"
+description: "Executes automated smoke/readiness verification against provisioned agent workload"
+
+inputs:
+  smoke_test_script:
+    description: "Path to Python smoke test script"
+    required: true
+  working_directory:
+    description: "Working directory for test execution"
+    required: false
+    default: "."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Execute Smoke Test
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        echo "Executing readiness test: ${{ inputs.smoke_test_script }}..."
+        python3 "${{ inputs.smoke_test_script }}"
+        echo "Readiness test completed successfully."
