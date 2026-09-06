@@ -28,6 +28,11 @@ from api.app.repositories.platform_repositories import (
     request_repo,
 )
 from api.app.services.idempotency_service import compute_payload_digest
+from api.app.services.notification_service import (
+    NotificationEvent,
+    NotificationService,
+    notification_service,
+)
 
 router = APIRouter(prefix="/callbacks", tags=["Callbacks"])
 
@@ -45,6 +50,7 @@ async def receive_pipeline_callback(
     deployments: DeploymentRepository = Depends(lambda: deployment_repo),
     callbacks: CallbackEventRepository = Depends(lambda: callback_repo),
     audits: AuditEventRepository = Depends(lambda: audit_repo),
+    notifications: NotificationService = Depends(lambda: notification_service),
 ) -> CallbackResponse:
     # 1. Fetch associated request record
     req = await requests.get(payload.request_id)
@@ -175,6 +181,22 @@ async def receive_pipeline_callback(
                 "status": payload.status,
                 "run_id": payload.github_run_id,
             },
+        )
+    )
+
+    # 8b. Publish notification event
+    await notifications.publish(
+        NotificationEvent(
+            event_type=f"PIPELINE_{payload.status}",
+            request_id=req.request_id,
+            deployment_id=req.deployment_id,
+            template_id=req.template_id,
+            workspace=req.workspace,
+            environment=req.environment,
+            status=payload.status,
+            actor_id=pipeline_identity.email,
+            summary=payload.summary,
+            safe_payload={"sequence": payload.event_sequence, "outputs": payload.outputs},
         )
     )
 

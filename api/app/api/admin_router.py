@@ -23,6 +23,10 @@ from api.app.repositories.platform_repositories import (
     request_repo,
 )
 from api.app.repositories.user_repository import UserRecord
+from api.app.services.notification_service import (
+    NotificationService,
+    notification_service,
+)
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -46,6 +50,7 @@ async def reconcile_callbacks(
     deployments: DeploymentRepository = Depends(lambda: deployment_repo),
     callbacks: CallbackEventRepository = Depends(lambda: callback_repo),
     audits: AuditEventRepository = Depends(lambda: audit_repo),
+    notifications: NotificationService = Depends(lambda: notification_service),
 ) -> ReconcileResponse:
     # 1. Admin Role Authorization
     if current_user.role != "platform_admin":
@@ -74,6 +79,7 @@ async def reconcile_callbacks(
                 deployments=deployments,
                 callbacks=callbacks,
                 audits=audits,
+                notifications=notifications,
             )
             reconciled_count += 1
             reconciled_requests.append(event_input.request_id)

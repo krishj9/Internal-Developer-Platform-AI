@@ -34,6 +34,11 @@ from api.app.services.idempotency_service import (
     compute_payload_digest,
     idempotency_service,
 )
+from api.app.services.notification_service import (
+    NotificationEvent,
+    NotificationService,
+    notification_service,
+)
 
 router = APIRouter(prefix="/requests", tags=["Requests"])
 
@@ -57,6 +62,7 @@ async def create_request(
     audits: AuditEventRepository = Depends(lambda: audit_repo),
     dispatcher: GitHubDispatchService = Depends(lambda: github_dispatcher),
     idempotency: IdempotencyService = Depends(lambda: idempotency_service),
+    notifications: NotificationService = Depends(lambda: notification_service),
 ) -> RequestResponse:
     # 1. Authorization check: User must have access to workspace unless platform_admin
     user_workspaces = set(current_user.workspaces)
@@ -64,6 +70,13 @@ async def create_request(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Access denied to workspace '{input_data.workspace}'.",
+        )
+
+    # 1b. Production environment check: Only platform_admin can deploy to prod
+    if input_data.environment == "prod" and current_user.role != "platform_admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Production deployment requests require platform_admin role.",
         )
 
     # 2. Idempotency replay check
@@ -151,6 +164,12 @@ async def create_request(
 
     # 6. Dispatch workflow via GitHub
     workflow_file = f"deploy-{template.template_id.split('-')[0]}.yml"
+    tpl_prefix = template.template_id.split("-")[0]
+    pipeline_sa = (
+        f"idp-pipeline-{tpl_prefix}-prod@project.iam.gserviceaccount.com"
+        if input_data.environment == "prod"
+        else f"idp-pipeline-{tpl_prefix}-dev@project.iam.gserviceaccount.com"
+    )
     dispatch_inputs = {
         "request_id": request_id,
         "deployment_id": deployment_id,
@@ -165,7 +184,7 @@ async def create_request(
         "workload_identity_provider": (
             "projects/123/locations/global/workloadIdentityPools/idp-pool"
         ),
-        "service_account": "idp-pipeline-t1-dev@project.iam.gserviceaccount.com",
+        "service_account": pipeline_sa,
         "state_bucket": "idp-tfstate-bucket",
     }
     await dispatcher.dispatch_workflow(
@@ -190,6 +209,24 @@ async def create_request(
             deployment_id=deployment_id,
             outcome="SUCCESS",
             safe_metadata={"workspace": input_data.workspace, "template_id": template.template_id},
+        )
+    )
+
+    # 8b. Publish notification event across boundary
+    summary_msg = (
+        f"Lifecycle request dispatched for {template.template_id} ({input_data.environment})"
+    )
+    await notifications.publish(
+        NotificationEvent(
+            event_type="REQUEST_DISPATCHED",
+            request_id=dispatched_req.request_id,
+            deployment_id=dispatched_req.deployment_id,
+            template_id=dispatched_req.template_id,
+            workspace=dispatched_req.workspace,
+            environment=dispatched_req.environment,
+            status=dispatched_req.status.value,
+            actor_id=current_user.user_id,
+            summary=summary_msg,
         )
     )
 

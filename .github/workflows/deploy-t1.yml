@@ -54,8 +54,8 @@ permissions:
   contents: read
 
 jobs:
-  execute-lifecycle:
-    name: Execute T1 Lifecycle
+  plan:
+    name: Terraform Plan Stage
     runs-on: ubuntu-latest
 
     steps:
@@ -94,9 +94,29 @@ jobs:
               "event_sequence": 1,
               "operation": "${{ github.event.inputs.operation }}",
               "status": "PLANNING",
-              "summary": "Terraform planning stage initiated.",
+              "summary": "Terraform planning stage completed.",
               "artifact_references": []
             }
+
+  apply:
+    name: Terraform Apply & Readiness Gate
+    needs: [plan]
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout Immutable Template Release
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.template_commit_sha }}
+
+      - name: Authenticate to GCP via WIF
+        id: gcp_auth
+        uses: ./.github/actions/authenticate-gcp-wif
+        with:
+          workload_identity_provider: ${{ github.event.inputs.workload_identity_provider }}
+          service_account: ${{ github.event.inputs.service_account }}
+          id_token_audience: ${{ github.event.inputs.callback_url }}
 
       - name: Post APPLYING Callback
         uses: ./.github/actions/post-pipeline-callback

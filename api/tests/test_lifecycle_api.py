@@ -330,3 +330,81 @@ async def test_submit_t2_managed_rag_request():
         assert data["template_id"] == "t2-managed-rag"
         assert data["status"] == "DISPATCHED"
         assert data["workspace"] == "ws-dev"
+
+
+@pytest.mark.asyncio
+async def test_submit_prod_request_authorization():
+    dev_token = await get_auth_token("alice", "ValidPassword123!")
+    admin_token = await get_auth_token("admin", "AdminPass123!")
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        prod_payload = {
+            "workspace": "ws-prod",
+            "template_id": "t1-agent-engine",
+            "template_version": "2.0.0",
+            "environment": "prod",
+            "inputs": {
+                "agent_name": "prod-support-agent",
+                "model_name": "gemini-2.5-pro",
+                "region": "us-central1",
+            },
+        }
+
+        # 1. Update t1 template to support prod environment
+        t1 = await template_repo.get("t1-agent-engine", "2.0.0")
+        if t1:
+            t1.supported_environments = ["dev", "prod"]
+            await template_repo.save(t1)
+
+        # 2. Developer denied prod deployment -> 403 Forbidden
+        denied_res = await client.post(
+            "/requests",
+            json=prod_payload,
+            headers={
+                "Authorization": f"Bearer {dev_token}",
+                "Idempotency-Key": "key-prod-denied",
+            },
+        )
+        assert denied_res.status_code == 403
+
+        # 3. Admin allowed prod deployment -> 202 Accepted
+        allowed_res = await client.post(
+            "/requests",
+            json=prod_payload,
+            headers={
+                "Authorization": f"Bearer {admin_token}",
+                "Idempotency-Key": "key-prod-allowed",
+            },
+        )
+        assert allowed_res.status_code == 202
+        data = allowed_res.json()
+        assert data["environment"] == "prod"
+        assert data["status"] == "DISPATCHED"
+
+
+@pytest.mark.asyncio
+async def test_notification_service_and_slack_payload():
+    from api.app.services.notification_service import NotificationEvent, notification_service
+
+    notification_service.clear()
+    event = NotificationEvent(
+        event_type="PROVISIONING_SUCCEEDED",
+        request_id="req-test-123",
+        deployment_id="dep-test-456",
+        template_id="t1-agent-engine",
+        workspace="ws-dev",
+        environment="dev",
+        status="SUCCEEDED",
+        actor_id="alice",
+        summary="Agent deployed successfully",
+    )
+    await notification_service.publish(event)
+    events = notification_service.get_published_events()
+    assert len(events) == 1
+    assert events[0].request_id == "req-test-123"
+
+    slack_msg = notification_service.format_slack_message(event)
+    assert "attachments" in slack_msg
+    assert len(slack_msg["attachments"]) == 1
+    blocks = slack_msg["attachments"][0]["blocks"]
+    assert any("IDP Event: PROVISIONING_SUCCEEDED" in str(b) for b in blocks)
