@@ -91,7 +91,7 @@ DEFAULT_TEMPLATES = [
     {
         "template_id": "t1-agent-engine",
         "template_version": "2.0.0",
-        "template_commit_sha": "010078cf6745f44da605f6fa0768b4f177c385a5",
+        "template_commit_sha": "main",
         "display_name": "Agent on Vertex AI Agent Engine",
         "description": "Governed ADK-based agent deployed to Google Cloud Agent Engine.",
         "supported_environments": ["dev"],
@@ -104,7 +104,7 @@ DEFAULT_TEMPLATES = [
     {
         "template_id": "t2-managed-rag",
         "template_version": "2.0.0",
-        "template_commit_sha": "010078cf6745f44da605f6fa0768b4f177c385a5",
+        "template_commit_sha": "main",
         "display_name": "Vertex AI Managed RAG Engine",
         "description": "Governed Vertex AI RAG Engine stack with RagManagedDb.",
         "supported_environments": ["dev"],
@@ -117,7 +117,7 @@ DEFAULT_TEMPLATES = [
     {
         "template_id": "t3-cloud-run-agent",
         "template_version": "2.0.0",
-        "template_commit_sha": "010078cf6745f44da605f6fa0768b4f177c385a5",
+        "template_commit_sha": "main",
         "display_name": "Agent on Cloud Run Service",
         "description": "Governed ADK-based agent deployed to Google Cloud Run v2.",
         "supported_environments": ["dev"],
@@ -130,7 +130,7 @@ DEFAULT_TEMPLATES = [
     {
         "template_id": "t4-governance",
         "template_version": "2.0.0",
-        "template_commit_sha": "010078cf6745f44da605f6fa0768b4f177c385a5",
+        "template_commit_sha": "main",
         "display_name": "Governance & Operational Controls",
         "description": (
             "Governed Model Armor guardrails, Cloud Monitoring alerts, "

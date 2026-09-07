@@ -136,13 +136,21 @@ async def create_request(
     request_id = f"req-{uuid.uuid4().hex[:8]}"
     input_digest = compute_payload_digest(input_data.inputs)
 
+    # Ensure commit SHA resolves to 'main' if it's a known stale SHA, dummy seed SHA, or empty
+    resolved_commit_sha = template.template_commit_sha
+    if not resolved_commit_sha or resolved_commit_sha in {
+        "010078cf6745f44da605f6fa0768b4f177c385a5",
+        "55e69c7b9da54a49ef8b0f49c061fe7dbdb98998",
+    }:
+        resolved_commit_sha = "main"
+
     deployment = DeploymentRecord(
         deployment_id=deployment_id,
         workspace=input_data.workspace,
         environment=input_data.environment,
         template_id=template.template_id,
         template_version=template.template_version,
-        template_commit_sha=template.template_commit_sha,
+        template_commit_sha=resolved_commit_sha,
         status=DeploymentStatus.PENDING,
         owner_user_id=current_user.user_id,
         active_request_id=request_id,
@@ -158,7 +166,7 @@ async def create_request(
         environment=input_data.environment,
         template_id=template.template_id,
         template_version=template.template_version,
-        template_commit_sha=template.template_commit_sha,
+        template_commit_sha=resolved_commit_sha,
         actor_user_id=current_user.user_id,
         actor_role=current_user.role,
         inputs=input_data.inputs,
@@ -184,10 +192,6 @@ async def create_request(
         "owner": current_user.username,
         **input_data.inputs,
     }
-    # Ensure commit SHA resolves to 'main' if it's the dummy seed SHA or empty
-    resolved_commit_sha = template.template_commit_sha
-    if not resolved_commit_sha or resolved_commit_sha == "010078cf6745f44da605f6fa0768b4f177c385a5":
-        resolved_commit_sha = "main"
 
     dispatch_inputs = {
         "request_id": request_id,

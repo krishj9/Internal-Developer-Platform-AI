@@ -61,8 +61,16 @@ jobs:
     steps:
       - name: Checkout Immutable Template Release
         uses: actions/checkout@v4
+        continue-on-error: true
+        id: primary_checkout
         with:
-          ref: ${{ (github.event.inputs.template_commit_sha != '' && github.event.inputs.template_commit_sha != '010078cf6745f44da605f6fa0768b4f177c385a5') && github.event.inputs.template_commit_sha || 'main' }}
+          ref: ${{ (github.event.inputs.template_commit_sha != '' && github.event.inputs.template_commit_sha != '010078cf6745f44da605f6fa0768b4f177c385a5' && github.event.inputs.template_commit_sha != '55e69c7b9da54a49ef8b0f49c061fe7dbdb98998') && github.event.inputs.template_commit_sha || 'main' }}
+
+      - name: Fallback Checkout main
+        if: steps.primary_checkout.outcome == 'failure'
+        uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Authenticate to GCP via WIF
         id: gcp_auth
@@ -107,8 +115,16 @@ jobs:
     steps:
       - name: Checkout Immutable Template Release
         uses: actions/checkout@v4
+        continue-on-error: true
+        id: primary_checkout
         with:
-          ref: ${{ (github.event.inputs.template_commit_sha != '' && github.event.inputs.template_commit_sha != '010078cf6745f44da605f6fa0768b4f177c385a5') && github.event.inputs.template_commit_sha || 'main' }}
+          ref: ${{ (github.event.inputs.template_commit_sha != '' && github.event.inputs.template_commit_sha != '010078cf6745f44da605f6fa0768b4f177c385a5' && github.event.inputs.template_commit_sha != '55e69c7b9da54a49ef8b0f49c061fe7dbdb98998') && github.event.inputs.template_commit_sha || 'main' }}
+
+      - name: Fallback Checkout main
+        if: steps.primary_checkout.outcome == 'failure'
+        uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Authenticate to GCP via WIF
         id: gcp_auth

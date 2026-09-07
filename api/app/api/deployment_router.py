@@ -361,9 +361,12 @@ async def destroy_deployment(
         "workspace": dep.workspace,
         "owner": current_user.username,
     }
-    # Ensure commit SHA resolves to 'main' if it's the dummy seed SHA or empty
+    # Ensure commit SHA resolves to 'main' if it's a known stale SHA, dummy seed SHA, or empty
     resolved_commit_sha = dep.template_commit_sha
-    if not resolved_commit_sha or resolved_commit_sha == "010078cf6745f44da605f6fa0768b4f177c385a5":
+    if not resolved_commit_sha or resolved_commit_sha in {
+        "010078cf6745f44da605f6fa0768b4f177c385a5",
+        "55e69c7b9da54a49ef8b0f49c061fe7dbdb98998",
+    }:
         resolved_commit_sha = "main"
 
     dispatch_inputs = {
