@@ -143,3 +143,46 @@ def test_cli_deployment_config():
         assert "dep-123" in result.output
         assert "sa-t1-xyz" in result.output
         assert "gemini-2.5-flash" in result.output
+
+
+def test_cli_agent_query():
+    runner = CliRunner()
+    with patch("cli.idp.main.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_res = MagicMock()
+        mock_res.status_code = 200
+        mock_res.json.return_value = {
+            "deployment_id": "dep-123",
+            "model": "gemini-2.5-flash",
+            "guardrail_status": "PASSED",
+            "response": "Final Result: 525",
+            "tools_executed": [{"tool": "add", "args": {"a": 200, "b": 423}, "output": 623.0}],
+        }
+        mock_client.post.return_value = mock_res
+        mock_get_client.return_value = (mock_client, "http://test")
+
+        result = runner.invoke(cli, ["agent", "query", "dep-123", "Add 200 to 423"])
+        assert result.exit_code == 0
+        assert "dep-123" in result.output
+        assert "Final Result: 525" in result.output
+        assert "add({'a': 200, 'b': 423}) -> 623.0" in result.output
+
+
+def test_cli_agent_ping():
+    runner = CliRunner()
+    with patch("cli.idp.main.get_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_res = MagicMock()
+        mock_res.status_code = 200
+        mock_res.json.return_value = {
+            "deployment_id": "dep-123",
+            "response": "pong",
+            "model": "gemini-2.5-flash",
+        }
+        mock_client.post.return_value = mock_res
+        mock_get_client.return_value = (mock_client, "http://test")
+
+        result = runner.invoke(cli, ["agent", "ping", "dep-123"])
+        assert result.exit_code == 0
+        assert "HEALTHY and READY" in result.output
+

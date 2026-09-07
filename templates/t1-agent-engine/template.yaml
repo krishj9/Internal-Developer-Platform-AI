@@ -64,6 +64,10 @@ output_contract:
     - deployment_id
     - agent_name
     - agent_engine_resource_id
+    - runtime_sa_email
+    - staging_bucket
+    - tool_secret_id
+    - alert_policy_id
     - model_name
     - region
     - status

@@ -7,7 +7,13 @@ import uuid
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
-from api.app.api.schemas import DeploymentConfigResponse, DeploymentResponse, RequestResponse
+from api.app.api.schemas import (
+    AgentQueryRequest,
+    AgentQueryResponse,
+    DeploymentConfigResponse,
+    DeploymentResponse,
+    RequestResponse,
+)
 from api.app.auth.dependencies import get_current_user
 from api.app.core.settings import settings
 from api.app.domain.models import (
@@ -27,6 +33,7 @@ from api.app.repositories.platform_repositories import (
     get_request_repo,
 )
 from api.app.repositories.user_repository import UserRecord
+from api.app.services.agent_service import AgentPolicyViolationError, agent_proxy_service
 from api.app.services.github_dispatch_service import (
     GitHubDispatchError,
     GitHubDispatchService,
@@ -155,6 +162,99 @@ async def get_deployment_config(
         template_id=dep.template_id,
         template_version=dep.template_version,
         safe_config=safe_config,
+    )
+
+
+@router.post(
+    "/{deployment_id}/query",
+    response_model=AgentQueryResponse,
+    summary="Query Deployed Agent",
+    description="Send a governed prompt to an active deployment with Model Armor screening.",
+)
+async def query_deployment_agent(
+    deployment_id: str,
+    payload: AgentQueryRequest,
+    current_user: UserRecord = Depends(get_current_user),
+    deployments: DeploymentRepository = Depends(get_deployment_repo),
+    audits: AuditEventRepository = Depends(get_audit_repo),
+) -> AgentQueryResponse:
+    dep = await deployments.get(deployment_id)
+    if not dep:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Deployment '{deployment_id}' not found.",
+        )
+
+    if current_user.role != "platform_admin" and dep.workspace not in current_user.workspaces:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this deployment.",
+        )
+
+    if dep.status != DeploymentStatus.ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Deployment is not in ACTIVE state (current status: {dep.status}).",
+        )
+
+    try:
+        response_text, model_name, tools_executed, guardrail_status = (
+            agent_proxy_service.execute_query(
+                deployment_id=deployment_id,
+                template_id=dep.template_id,
+                safe_outputs=dep.safe_outputs,
+                prompt=payload.prompt,
+            )
+        )
+    except AgentPolicyViolationError as e:
+        await audits.append(
+            AuditEventRecord(
+                audit_event_id=f"aud-{uuid.uuid4().hex[:8]}",
+                actor_type="user",
+                actor_id=current_user.user_id,
+                action="agent_query_blocked",
+                resource_type="deployment",
+                resource_id=deployment_id,
+                deployment_id=deployment_id,
+                outcome="BLOCKED",
+                safe_metadata={"violations": e.violations, "workspace": dep.workspace},
+            )
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": "Model Armor violation",
+                "message": str(e),
+                "violations": e.violations,
+            },
+        ) from e
+
+    # Audit successful query
+    await audits.append(
+        AuditEventRecord(
+            audit_event_id=f"aud-{uuid.uuid4().hex[:8]}",
+            actor_type="user",
+            actor_id=current_user.user_id,
+            action="agent_query",
+            resource_type="deployment",
+            resource_id=deployment_id,
+            deployment_id=deployment_id,
+            outcome="SUCCESS",
+            safe_metadata={
+                "workspace": dep.workspace,
+                "tool_count": len(tools_executed),
+                "model": model_name,
+            },
+        )
+    )
+
+    return AgentQueryResponse(
+        deployment_id=deployment_id,
+        status="success",
+        response=response_text,
+        model=model_name,
+        tools_executed=tools_executed,
+        guardrail_status=guardrail_status,
     )
 
 

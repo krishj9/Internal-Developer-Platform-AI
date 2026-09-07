@@ -198,7 +198,12 @@ def get_deployment_config(deployment_id, out):
         "model_name": outputs.get("model_name"),
         "region": outputs.get("region"),
         "runtime_service_account": outputs.get("runtime_sa_email"),
-        "staging_bucket": f"idp-state-{safe_config.get('project_id')}",
+        "staging_bucket": (
+            outputs.get("staging_bucket") or f"idp-state-{safe_config.get('project_id')}"
+        ),
+        "tool_secret_id": outputs.get("tool_secret_id"),
+        "alert_policy_id": outputs.get("alert_policy_id"),
+        "agent_engine_resource_id": outputs.get("agent_engine_resource_id"),
         "raw_outputs": outputs,
     }
     config_json = json.dumps(workload_config, indent=2)
@@ -226,6 +231,53 @@ def destroy_deployment(deployment_id):
     data = res.json()
     click.echo("Destroy request dispatched!")
     click.echo(f"Request ID: {data['request_id']}")
+
+
+@cli.group("agent")
+def agent_group():
+    """Interact with deployed agent reasoning engines."""
+    pass
+
+
+@agent_group.command("query")
+@click.argument("deployment_id")
+@click.argument("prompt")
+def query_agent(deployment_id, prompt):
+    """Send a prompt to a deployed agent."""
+    client, _ = get_client()
+    res = client.post(f"/deployments/{deployment_id}/query", json={"prompt": prompt})
+    if res.status_code != 200:
+        click.echo(f"Error: {res.text}", err=True)
+        sys.exit(1)
+    data = res.json()
+    click.echo(f"Deployment: {data['deployment_id']}")
+    click.echo(f"Model:      {data.get('model', 'N/A')}")
+    click.echo(f"Guardrails: {data.get('guardrail_status', 'PASSED')}")
+    tools = data.get("tools_executed", [])
+    if tools:
+        click.echo("\nExecuted Tools:")
+        for t in tools:
+            tool_name = t.get("tool")
+            args = t.get("args")
+            out = t.get("output")
+            click.echo(f"  • {tool_name}({args}) -> {out}")
+    click.echo(f"\nResponse:\n{data['response']}")
+
+
+@agent_group.command("ping")
+@click.argument("deployment_id")
+def ping_agent(deployment_id):
+    """Health check a deployed agent."""
+    client, _ = get_client()
+    res = client.post(f"/deployments/{deployment_id}/query", json={"prompt": "ping"})
+    if res.status_code != 200:
+        click.echo(f"Health check failed: {res.text}", err=True)
+        sys.exit(1)
+    data = res.json()
+    if data.get("response") == "pong":
+        click.echo(f"Agent {deployment_id} is HEALTHY and READY (pong received).")
+    else:
+        click.echo(f"Response: {data.get('response')}")
 
 
 @cli.group("governance")

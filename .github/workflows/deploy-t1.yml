@@ -144,6 +144,22 @@ jobs:
               "artifact_references": []
             }
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Destroy Vertex AI Reasoning Engine (Destroy Only)
+        if: github.event.inputs.operation == 'destroy'
+        shell: bash
+        run: |
+          python3 -m pip install -r templates/t1-agent-engine/agent/requirements.txt || true
+          python3 templates/t1-agent-engine/scripts/manage_reasoning_engine.py \
+            --operation destroy \
+            --deployment-id "${{ github.event.inputs.deployment_id }}" \
+            --project-id "mybrightday-dev" \
+            --region "us-central1" || true
+
       - name: Execute Terraform Lifecycle
         id: terraform
         uses: ./.github/actions/terraform-lifecycle
@@ -154,9 +170,40 @@ jobs:
           operation: ${{ github.event.inputs.operation == 'destroy' && 'destroy' || 'apply' }}
           var_file_content: ${{ github.event.inputs.inputs_json }}
 
+      - name: Deploy Vertex AI Reasoning Engine (Create Only)
+        id: deploy_engine
+        if: github.event.inputs.operation == 'create'
+        shell: bash
+        run: |
+          python3 -m pip install -r templates/t1-agent-engine/agent/requirements.txt || true
+          STAGING_BUCKET=$(echo '${{ steps.terraform.outputs.raw_outputs_json }}' | jq -r '.staging_bucket.value // ""')
+          RUNTIME_SA=$(echo '${{ steps.terraform.outputs.raw_outputs_json }}' | jq -r '.runtime_sa_email.value // ""')
+          TOOL_SECRET=$(echo '${{ steps.terraform.outputs.raw_outputs_json }}' | jq -r '.tool_secret_id.value // ""')
+          ALERT_POLICY=$(echo '${{ steps.terraform.outputs.raw_outputs_json }}' | jq -r '.alert_policy_id.value // ""')
+          MODEL_NAME=$(echo '${{ github.event.inputs.inputs_json }}' | jq -r '.model_name // "gemini-2.5-flash"')
+
+          python3 templates/t1-agent-engine/scripts/manage_reasoning_engine.py \
+            --operation create \
+            --deployment-id "${{ github.event.inputs.deployment_id }}" \
+            --project-id "mybrightday-dev" \
+            --region "us-central1" \
+            --staging-bucket "${STAGING_BUCKET}" \
+            --model-name "${MODEL_NAME}" \
+            --output-json /tmp/engine_output.json
+
+          RESOURCE_ID=$(jq -r '.agent_engine_resource_id // ""' /tmp/engine_output.json)
+          echo "resource_id=${RESOURCE_ID}" >> $GITHUB_OUTPUT
+          echo "staging_bucket=${STAGING_BUCKET}" >> $GITHUB_OUTPUT
+          echo "runtime_sa_email=${RUNTIME_SA}" >> $GITHUB_OUTPUT
+          echo "tool_secret_id=${TOOL_SECRET}" >> $GITHUB_OUTPUT
+          echo "alert_policy_id=${ALERT_POLICY}" >> $GITHUB_OUTPUT
+          echo "model_name=${MODEL_NAME}" >> $GITHUB_OUTPUT
+
       - name: Run Readiness Test (Create Only)
         if: github.event.inputs.operation == 'create'
         uses: ./.github/actions/run-readiness-test
+        env:
+          REASONING_ENGINE_RESOURCE_ID: ${{ steps.deploy_engine.outputs.resource_id }}
         with:
           smoke_test_script: "templates/t1-agent-engine/agent/smoke_test.py"
           working_directory: "templates/t1-agent-engine"
@@ -185,5 +232,16 @@ jobs:
               "operation": "${{ github.event.inputs.operation }}",
               "status": "SUCCEEDED",
               "summary": "Lifecycle ${{ github.event.inputs.operation }} completed successfully.",
-              "artifact_references": []
+              "artifact_references": [],
+              "outputs": {
+                "deployment_id": "${{ github.event.inputs.deployment_id }}",
+                "agent_engine_resource_id": "${{ steps.deploy_engine.outputs.resource_id }}",
+                "staging_bucket": "${{ steps.deploy_engine.outputs.staging_bucket }}",
+                "runtime_sa_email": "${{ steps.deploy_engine.outputs.runtime_sa_email }}",
+                "tool_secret_id": "${{ steps.deploy_engine.outputs.tool_secret_id }}",
+                "alert_policy_id": "${{ steps.deploy_engine.outputs.alert_policy_id }}",
+                "model_name": "${{ steps.deploy_engine.outputs.model_name || 'gemini-2.5-flash' }}",
+                "region": "us-central1",
+                "status": "ACTIVE"
+              }
             }

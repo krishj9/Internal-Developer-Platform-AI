@@ -68,3 +68,19 @@ class TemplateResponse(BaseModel):
     allowed_models: list[str]
     allowed_regions: list[str]
     cost_tier: str
+
+
+class AgentQueryRequest(BaseModel):
+    prompt: str = Field(
+        ..., min_length=1, max_length=2000, description="Natural language prompt for the agent"
+    )
+
+
+class AgentQueryResponse(BaseModel):
+    deployment_id: str
+    status: str
+    response: str
+    model: str | None = None
+    tools_executed: list[dict[str, Any]] = Field(default_factory=list)
+    guardrail_status: str = "PASSED"
+

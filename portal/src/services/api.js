@@ -117,5 +117,14 @@ export const api = {
       headers: getAuthHeaders()
     });
     return handleResponse(res);
+  },
+
+  async queryDeployment({ deploymentId, prompt }) {
+    const res = await fetch(`/deployments/${deploymentId}/query`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ prompt })
+    });
+    return handleResponse(res);
   }
 };

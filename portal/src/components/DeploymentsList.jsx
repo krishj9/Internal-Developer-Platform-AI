@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import DestroyModal from './DestroyModal';
-import { Server, Trash2, Clock, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, Code, Download } from 'lucide-react';
+import AgentPlayground from './AgentPlayground';
+import { Server, Trash2, Clock, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, Code, Download, Bot } from 'lucide-react';
 
 export default function DeploymentsList({ onTrackRequest }) {
   const { activeWorkspace } = useAuth();
@@ -11,6 +12,7 @@ export default function DeploymentsList({ onTrackRequest }) {
   const [error, setError] = useState('');
   const [selectedDestroyDep, setSelectedDestroyDep] = useState(null);
   const [viewConfigDep, setViewConfigDep] = useState(null);
+  const [playgroundDep, setPlaygroundDep] = useState(null);
 
   const loadDeployments = async () => {
     try {
@@ -46,7 +48,10 @@ export default function DeploymentsList({ onTrackRequest }) {
       model_name: outputs.model_name || 'gemini-2.5-flash',
       region: outputs.region || 'us-central1',
       runtime_service_account: outputs.runtime_sa_email || '',
-      staging_bucket: `idp-state-${dep.workspace}`,
+      staging_bucket: outputs.staging_bucket || `idp-state-${dep.workspace}`,
+      tool_secret_id: outputs.tool_secret_id || null,
+      alert_policy_id: outputs.alert_policy_id || null,
+      agent_engine_resource_id: outputs.agent_engine_resource_id || null,
       raw_outputs: outputs,
     };
     const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
@@ -148,6 +153,27 @@ export default function DeploymentsList({ onTrackRequest }) {
                     </td>
                     <td style={{ padding: '16px 20px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        {dep.status === 'ACTIVE' && (
+                          <button
+                            id={`btn-playground-${dep.deployment_id}`}
+                            className="btn btn-secondary"
+                            style={{ 
+                              padding: '6px 10px', 
+                              fontSize: '0.75rem', 
+                              borderColor: 'rgba(59, 130, 246, 0.4)', 
+                              background: 'rgba(37, 99, 235, 0.15)',
+                              color: '#93c5fd',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px'
+                            }}
+                            onClick={() => setPlaygroundDep(dep)}
+                            title="Interactive Agent Playground"
+                          >
+                            <Bot size={14} color="#60a5fa" />
+                            <span>Playground</span>
+                          </button>
+                        )}
                         <button
                           className="btn btn-secondary"
                           style={{ padding: '6px 10px', fontSize: '0.75rem' }}
@@ -216,6 +242,14 @@ export default function DeploymentsList({ onTrackRequest }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Agent Chat Playground Modal */}
+      {playgroundDep && (
+        <AgentPlayground
+          deployment={playgroundDep}
+          onClose={() => setPlaygroundDep(null)}
+        />
       )}
     </div>
   );

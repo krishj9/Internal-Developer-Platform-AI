@@ -23,6 +23,21 @@ output "region" {
   description = "GCP deployment region"
 }
 
+output "staging_bucket" {
+  value       = google_storage_bucket.agent_artifacts.name
+  description = "Dedicated GCS staging & artifact storage bucket with lifecycle TTL"
+}
+
+output "tool_secret_id" {
+  value       = google_secret_manager_secret.agent_tool_secrets.secret_id
+  description = "Dedicated Secret Manager secret container for agent tool credentials"
+}
+
+output "alert_policy_id" {
+  value       = google_monitoring_alert_policy.agent_error_alert.name
+  description = "Cloud Monitoring alert policy for agent error rate"
+}
+
 output "status" {
   value       = "PROVISIONED"
   description = "Provisioning status"
