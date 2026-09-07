@@ -10,6 +10,13 @@ import argparse
 import json
 import os
 import sys
+from pathlib import Path
+from typing import Any, cast
+
+# Ensure directory is in sys.path
+_current_dir = str(Path(__file__).parent.resolve())
+if _current_dir not in sys.path:
+    sys.path.insert(0, _current_dir)
 
 try:
     from math_agent import MathReasoningAgent
@@ -75,8 +82,8 @@ def deploy_to_vertex_ai(config: dict, dry_run: bool = False):
         )
 
         print("Packaging agent and publishing to Vertex AI Reasoning Engine...")
-        remote_engine = reasoning_engines.ReasoningEngine.create(
-            reasoning_engine=agent_instance,
+        remote_engine: Any = cast(Any, reasoning_engines.ReasoningEngine).create(
+            reasoning_engine=cast(Any, agent_instance),
             requirements=[
                 "google-cloud-aiplatform>=1.70.0",
                 "google-genai>=0.1.0",
@@ -86,7 +93,7 @@ def deploy_to_vertex_ai(config: dict, dry_run: bool = False):
             description=f"Governed Math Tool Agent on IDP T1 deployment {dep_id}",
         )
 
-        resource_name = remote_engine.resource_name
+        resource_name = getattr(remote_engine, "resource_name", str(remote_engine))
         print("\nSuccessfully deployed to Vertex AI Agent Engine!")
         print(f"Resource Name: {resource_name}")
 

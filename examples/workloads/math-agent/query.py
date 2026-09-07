@@ -10,6 +10,13 @@ import argparse
 import json
 import os
 import sys
+from pathlib import Path
+from typing import Any
+
+# Ensure directory is in sys.path
+_current_dir = str(Path(__file__).parent.resolve())
+if _current_dir not in sys.path:
+    sys.path.insert(0, _current_dir)
 
 try:
     from math_agent import create_agent
@@ -17,7 +24,7 @@ except ImportError:
     from .math_agent import create_agent
 
 
-def print_formatted_result(result: dict):
+def print_formatted_result(result: dict[str, Any]):
     print("\n" + "=" * 60)
     print("🤖 MATH REASONING AGENT EXECUTION")
     print("=" * 60)
@@ -75,9 +82,9 @@ def main():
                 project=status_data.get("project_id"),
                 location=status_data.get("region"),
             )
-            engine = reasoning_engines.ReasoningEngine(resource_name)
+            engine: Any = reasoning_engines.ReasoningEngine(resource_name)
             res = engine.query(prompt=args.prompt)
-            result_payload = (
+            result_payload: dict[str, Any] = (
                 res if isinstance(res, dict) else {"status": "success", "response": str(res)}
             )
             print_formatted_result(result_payload)

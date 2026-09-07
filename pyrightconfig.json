@@ -1,0 +1,18 @@
+{
+  "include": [
+    "api",
+    "cli",
+    "templates",
+    "examples"
+  ],
+  "extraPaths": [
+    ".",
+    "api",
+    "examples/workloads/math-agent",
+    "templates/t1-agent-engine/agent"
+  ],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.11",
+  "reportMissingImports": false
+}

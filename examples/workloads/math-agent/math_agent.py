@@ -8,7 +8,14 @@ and synthesize step-by-step reasoning into a final structured response.
 
 import os
 import re
-from typing import Any
+import sys
+from pathlib import Path
+from typing import Any, cast
+
+# Ensure directory is in sys.path
+_current_dir = str(Path(__file__).parent.resolve())
+if _current_dir not in sys.path:
+    sys.path.insert(0, _current_dir)
 
 try:
     from math_tools import MATH_TOOL_REGISTRY, MATH_TOOLS_LIST, add, divide, multiply, subtract
@@ -38,7 +45,7 @@ class MathReasoningAgent:
             "the result mentally. Execute each calculation step sequentially and explain "
             "the reasoning."
         )
-        self._model = None
+        self._model: Any = None
 
     def set_up(self) -> None:
         """
@@ -49,7 +56,7 @@ class MathReasoningAgent:
             from vertexai.generative_models import GenerativeModel, Tool
 
             vertexai.init(project=self.project_id, location=self.location)
-            math_tool = Tool(function_declarations=MATH_TOOLS_LIST)
+            math_tool = Tool(function_declarations=cast(Any, MATH_TOOLS_LIST))
             self._model = GenerativeModel(
                 model_name=self.model_name,
                 system_instruction=[self.system_instruction],
@@ -59,7 +66,7 @@ class MathReasoningAgent:
             # Fallback for local offline testing and mock verification
             self._model = None
 
-    def query(self, prompt: str) -> dict[str, Any]:
+    def query(self, prompt: str = "", **kwargs: Any) -> dict[str, Any]:
         """
         Execute agent reasoning and tool invocation for a natural language prompt.
         """
@@ -91,6 +98,8 @@ class MathReasoningAgent:
         Execute multi-turn tool calling loop with live Vertex AI Gemini model.
         """
         tool_calls_recorded = []
+        if self._model is None:
+            return {"status": "error", "message": "Model not initialized"}
         try:
             chat = self._model.start_chat()
             response = chat.send_message(prompt)
@@ -114,22 +123,26 @@ class MathReasoningAgent:
                                 "args": args,
                                 "output": output,
                             })
-                            response = chat.send_message({
-                                "role": "function",
-                                "name": fn_name,
-                                "content": {"result": output},
-                            })
+                            response = chat.send_message(
+                                cast(Any, {
+                                    "role": "function",
+                                    "name": fn_name,
+                                    "content": {"result": output},
+                                })
+                            )
                         except Exception as e:
                             tool_calls_recorded.append({
                                 "tool": fn_name,
                                 "args": args,
                                 "error": str(e),
                             })
-                            response = chat.send_message({
-                                "role": "function",
-                                "name": fn_name,
-                                "content": {"error": str(e)},
-                            })
+                            response = chat.send_message(
+                                cast(Any, {
+                                    "role": "function",
+                                    "name": fn_name,
+                                    "content": {"error": str(e)},
+                                })
+                            )
 
             final_text = response.text if hasattr(response, "text") else ""
             last_result = tool_calls_recorded[-1].get("output") if tool_calls_recorded else None

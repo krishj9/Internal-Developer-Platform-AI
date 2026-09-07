@@ -54,4 +54,9 @@ ignore = ["B008"]  # Allow FastAPI Depends() in argument defaults
 [tool.ruff.lint.isort]
 known-first-party = ["api", "app"]
 
+[dependency-groups]
+dev = [
+    "google-cloud-aiplatform>=2.1.0",
+]
+
 

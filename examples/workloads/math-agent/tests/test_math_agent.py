@@ -15,6 +15,8 @@ if str(_workload_dir) not in sys.path:
 
 def _load_module(mod_name: str, file_path: Path):
     spec = importlib.util.spec_from_file_location(mod_name, file_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load module specification from {file_path}")
     mod = importlib.util.module_from_spec(spec)
     sys.modules[mod_name] = mod
     spec.loader.exec_module(mod)
