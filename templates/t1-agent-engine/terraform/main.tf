@@ -111,7 +111,7 @@ resource "google_monitoring_alert_policy" "agent_error_alert" {
   conditions {
     display_name = "Agent Unhandled Error Rate > 5%"
     condition_threshold {
-      filter          = "resource.type = \"aiplatform.googleapis.com/ReasoningEngine\""
+      filter          = "resource.type = \"aiplatform.googleapis.com/ReasoningEngine\" AND metric.type = \"logging.googleapis.com/log_entry_count\" AND metric.labels.severity = \"ERROR\""
       duration        = "300s"
       comparison      = "COMPARISON_GT"
       threshold_value = 5.0
