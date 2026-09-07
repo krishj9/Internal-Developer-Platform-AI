@@ -2,6 +2,13 @@
  * IDP Control Plane API Client
  */
 
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+
+export function apiUrl(path) {
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${cleanPath}`;
+}
+
 function getAuthHeaders() {
   const token = localStorage.getItem('idp_token');
   return {
@@ -31,14 +38,14 @@ async function handleResponse(res) {
 
 export const api = {
   async getTemplates() {
-    const res = await fetch('/templates', {
+    const res = await fetch(apiUrl('/templates'), {
       headers: getAuthHeaders()
     });
     return handleResponse(res);
   },
 
   async submitRequest(payload) {
-    const res = await fetch('/requests', {
+    const res = await fetch(apiUrl('/requests'), {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -50,14 +57,16 @@ export const api = {
   },
 
   async getRequest(requestId) {
-    const res = await fetch(`/requests/${requestId}`, {
+    const res = await fetch(apiUrl(`/requests/${requestId}`), {
       headers: getAuthHeaders()
     });
     return handleResponse(res);
   },
 
   async getDeployments(workspace = null) {
-    const url = workspace ? `/deployments?workspace=${encodeURIComponent(workspace)}` : '/deployments';
+    const url = workspace
+      ? apiUrl(`/deployments?workspace=${encodeURIComponent(workspace)}`)
+      : apiUrl('/deployments');
     const res = await fetch(url, {
       headers: getAuthHeaders()
     });
@@ -65,14 +74,14 @@ export const api = {
   },
 
   async getDeploymentConfig(deploymentId) {
-    const res = await fetch(`/deployments/${deploymentId}/config`, {
+    const res = await fetch(apiUrl(`/deployments/${deploymentId}/config`), {
       headers: getAuthHeaders()
     });
     return handleResponse(res);
   },
 
   async destroyDeployment(deploymentId) {
-    const res = await fetch(`/deployments/${deploymentId}/destroy`, {
+    const res = await fetch(apiUrl(`/deployments/${deploymentId}/destroy`), {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -83,7 +92,7 @@ export const api = {
   },
 
   async inspectModelArmor({ text, point = 'prompt', mode = 'block' }) {
-    const res = await fetch('/governance/inspect', {
+    const res = await fetch(apiUrl('/governance/inspect'), {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ text, point, mode })
@@ -92,14 +101,14 @@ export const api = {
   },
 
   async getExpiredDeployments() {
-    const res = await fetch('/governance/expired-deployments', {
+    const res = await fetch(apiUrl('/governance/expired-deployments'), {
       headers: getAuthHeaders()
     });
     return handleResponse(res);
   },
 
   async overrideTtl({ deploymentId, extensionDays = 7, reason }) {
-    const res = await fetch('/governance/ttl-override', {
+    const res = await fetch(apiUrl('/governance/ttl-override'), {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({
@@ -112,7 +121,7 @@ export const api = {
   },
 
   async cleanupExpired() {
-    const res = await fetch('/governance/cleanup-expired', {
+    const res = await fetch(apiUrl('/governance/cleanup-expired'), {
       method: 'POST',
       headers: getAuthHeaders()
     });
@@ -120,7 +129,7 @@ export const api = {
   },
 
   async queryDeployment({ deploymentId, prompt }) {
-    const res = await fetch(`/deployments/${deploymentId}/query`, {
+    const res = await fetch(apiUrl(`/deployments/${deploymentId}/query`), {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ prompt })

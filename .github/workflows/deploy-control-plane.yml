@@ -1,0 +1,158 @@
+name: Deploy IDP Control Plane (Cloud Run & Firebase)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - "portal/**"
+      - "firebase.json"
+      - ".firebaserc"
+      - ".github/workflows/deploy-control-plane.yml"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Target component to deploy"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - api
+          - portal
+      environment:
+        description: "Deployment target environment"
+        required: true
+        default: "dev"
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  GCP_PROJECT: "mybrightday-dev"
+  GCP_REGION: "us-central1"
+  WIF_PROVIDER: "projects/754915077075/locations/global/workloadIdentityPools/idp-github-pool/providers/idp-github-provider"
+  PIPELINE_SA: "idp-pipeline-t1-dev@mybrightday-dev.iam.gserviceaccount.com"
+  RUNTIME_SA: "idp-api-runtime@mybrightday-dev.iam.gserviceaccount.com"
+  CLOUD_RUN_SERVICE: "idp-api"
+  FIREBASE_SITE: "idp4gcp"
+
+jobs:
+  deploy-api:
+    name: Deploy API to Cloud Run
+    if: github.event_name == 'push' || github.event.inputs.target == 'all' || github.event.inputs.target == 'api'
+    runs-on: ubuntu-latest
+    outputs:
+      api_url: ${{ steps.get_url.outputs.api_url }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via WIF
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.PIPELINE_SA }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+
+      - name: Deploy FastAPI Control Plane to Cloud Run
+        id: deploy_run
+        run: |
+          echo "Deploying Cloud Run service '${{ env.CLOUD_RUN_SERVICE }}' from source..."
+          gcloud run deploy ${{ env.CLOUD_RUN_SERVICE }} \
+            --source api/ \
+            --project ${{ env.GCP_PROJECT }} \
+            --region ${{ env.GCP_REGION }} \
+            --service-account ${{ env.RUNTIME_SA }} \
+            --allow-unauthenticated \
+            --set-env-vars PROJECT_ID=${{ env.GCP_PROJECT }},ENVIRONMENT=dev,USE_FIRESTORE=true,FIRESTORE_DATABASE=idp-db,USE_SECRET_MANAGER=true \
+            --format="value(status.url)" > api_url.txt
+
+      - name: Capture Deployed Service URL
+        id: get_url
+        run: |
+          API_URL=$(cat api_url.txt)
+          echo "Deployed API URL: ${API_URL}"
+          echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
+
+      - name: Verify Cloud Run API Health
+        run: |
+          API_URL=$(cat api_url.txt)
+          echo "Testing healthz endpoint at ${API_URL}/healthz..."
+          curl -f -s --retry 5 --retry-delay 5 "${API_URL}/healthz"
+          echo "Health check passed!"
+
+  deploy-portal:
+    name: Deploy Portal to Firebase Hosting
+    needs: [deploy-api]
+    if: |
+      always() &&
+      (github.event_name == 'push' || github.event.inputs.target == 'all' || github.event.inputs.target == 'portal') &&
+      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: portal/package-lock.json
+
+      - name: Authenticate to GCP via WIF
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.PIPELINE_SA }}
+
+      - name: Resolve API Target URL
+        id: resolve_api
+        run: |
+          DEPLOYED_URL="${{ needs.deploy-api.outputs.api_url }}"
+          if [ -n "${DEPLOYED_URL}" ]; then
+            echo "Using newly deployed API URL: ${DEPLOYED_URL}"
+            echo "api_url=${DEPLOYED_URL}" >> $GITHUB_OUTPUT
+          else
+            # Fallback for portal-only deployments: query existing Cloud Run service
+            echo "Querying Cloud Run service URL for '${{ env.CLOUD_RUN_SERVICE }}'..."
+            FETCHED_URL=$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE }} \
+              --project ${{ env.GCP_PROJECT }} \
+              --region ${{ env.GCP_REGION }} \
+              --format="value(status.url)" 2>/dev/null || echo "https://idp-api-754915077075.us-central1.run.app")
+            echo "Using API URL: ${FETCHED_URL}"
+            echo "api_url=${FETCHED_URL}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Dependencies & Build Portal
+        working-directory: portal
+        env:
+          VITE_API_URL: ${{ steps.resolve_api.outputs.api_url }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to Firebase Hosting
+        run: |
+          echo "Deploying portal bundle to Firebase Hosting site '${{ env.FIREBASE_SITE }}'..."
+          npx firebase-tools deploy \
+            --only hosting:${{ env.FIREBASE_SITE }} \
+            --project ${{ env.GCP_PROJECT }} \
+            --non-interactive
+
+      - name: Deployment Summary
+        run: |
+          echo "=========================================================="
+          echo "🎉 Control Plane Deployment Successful!"
+          echo "  • Portal (Firebase): https://${{ env.FIREBASE_SITE }}.web.app"
+          echo "  • API (Cloud Run):   ${{ steps.resolve_api.outputs.api_url }}"
+          echo "=========================================================="

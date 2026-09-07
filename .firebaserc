@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "mybrightday-dev"
+  },
+  "targets": {
+    "mybrightday-dev": {
+      "hosting": {
+        "idp4gcp": [
+          "idp4gcp"
+        ]
+      }
+    }
+  }
+}

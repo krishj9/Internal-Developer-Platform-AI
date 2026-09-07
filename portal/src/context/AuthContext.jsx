@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiUrl } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -20,7 +21,7 @@ export function AuthProvider({ children }) {
         return;
       }
       try {
-        const res = await fetch('/auth/me', {
+        const res = await fetch(apiUrl('/auth/me'), {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -46,7 +47,7 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const login = async (username, password) => {
-    const res = await fetch('/auth/login', {
+    const res = await fetch(apiUrl('/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
@@ -63,7 +64,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem('idp_token', accessToken);
 
     // Fetch user profile immediately
-    const meRes = await fetch('/auth/me', {
+    const meRes = await fetch(apiUrl('/auth/me'), {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     if (meRes.ok) {
