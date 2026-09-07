@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "idp4gcp",
+    "target": "idp4gcp",
     "public": "portal/dist",
     "ignore": [
       "firebase.json",

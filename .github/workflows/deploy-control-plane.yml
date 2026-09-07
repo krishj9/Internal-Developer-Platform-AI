@@ -38,6 +38,7 @@ env:
   RUNTIME_SA: "idp-api-runtime@mybrightday-dev.iam.gserviceaccount.com"
   CLOUD_RUN_SERVICE: "idp-api"
   FIREBASE_SITE: "idp4gcp"
+  DEFAULT_API_URL: "https://idp-api-754915077075.us-central1.run.app"
 
 jobs:
   deploy-api:
@@ -91,11 +92,7 @@ jobs:
 
   deploy-portal:
     name: Deploy Portal to Firebase Hosting
-    needs: [deploy-api]
-    if: |
-      always() &&
-      (github.event_name == 'push' || github.event.inputs.target == 'all' || github.event.inputs.target == 'portal') &&
-      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
+    if: github.event_name == 'push' || github.event.inputs.target == 'all' || github.event.inputs.target == 'portal'
     runs-on: ubuntu-latest
 
     steps:
@@ -114,30 +111,15 @@ jobs:
         with:
           workload_identity_provider: ${{ env.WIF_PROVIDER }}
           service_account: ${{ env.PIPELINE_SA }}
-
-      - name: Resolve API Target URL
-        id: resolve_api
-        run: |
-          DEPLOYED_URL="${{ needs.deploy-api.outputs.api_url }}"
-          if [ -n "${DEPLOYED_URL}" ]; then
-            echo "Using newly deployed API URL: ${DEPLOYED_URL}"
-            echo "api_url=${DEPLOYED_URL}" >> $GITHUB_OUTPUT
-          else
-            # Fallback for portal-only deployments: query existing Cloud Run service
-            echo "Querying Cloud Run service URL for '${{ env.CLOUD_RUN_SERVICE }}'..."
-            FETCHED_URL=$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE }} \
-              --project ${{ env.GCP_PROJECT }} \
-              --region ${{ env.GCP_REGION }} \
-              --format="value(status.url)" 2>/dev/null || echo "https://idp-api-754915077075.us-central1.run.app")
-            echo "Using API URL: ${FETCHED_URL}"
-            echo "api_url=${FETCHED_URL}" >> $GITHUB_OUTPUT
-          fi
+          create_credentials_file: true
+          export_environment_variables: true
 
       - name: Install Dependencies & Build Portal
         working-directory: portal
         env:
-          VITE_API_URL: ${{ steps.resolve_api.outputs.api_url }}
+          VITE_API_URL: ${{ env.DEFAULT_API_URL }}
         run: |
+          echo "Installing dependencies and building portal with API URL: ${VITE_API_URL}..."
           npm ci
           npm run build
 
@@ -145,14 +127,14 @@ jobs:
         run: |
           echo "Deploying portal bundle to Firebase Hosting site '${{ env.FIREBASE_SITE }}'..."
           npx firebase-tools deploy \
-            --only hosting:${{ env.FIREBASE_SITE }} \
+            --only hosting \
             --project ${{ env.GCP_PROJECT }} \
             --non-interactive
 
       - name: Deployment Summary
         run: |
           echo "=========================================================="
-          echo "🎉 Control Plane Deployment Successful!"
-          echo "  • Portal (Firebase): https://${{ env.FIREBASE_SITE }}.web.app"
-          echo "  • API (Cloud Run):   ${{ steps.resolve_api.outputs.api_url }}"
+          echo "🎉 Portal Deployment Successful!"
+          echo "  • Live URL: https://${{ env.FIREBASE_SITE }}.web.app"
+          echo "  • API URL:  ${{ env.DEFAULT_API_URL }}"
           echo "=========================================================="

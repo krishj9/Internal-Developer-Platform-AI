@@ -59,11 +59,21 @@ gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
   --role="roles/storage.admin" \
   --condition=None --quiet
 
-# 4. Firebase Hosting Deployment Roles
-echo "6. Granting Firebase Hosting Admin (roles/firebasehosting.admin)..."
+# 4. Firebase Hosting Deployment Roles & APIs
+echo "6. Enabling Firebase APIs (firebase.googleapis.com, firebasehosting.googleapis.com)..."
+gcloud services enable firebase.googleapis.com firebasehosting.googleapis.com \
+  --project="${PROJECT_ID}" --quiet || true
+
+echo "7. Granting Firebase Hosting Admin (roles/firebasehosting.admin)..."
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
   --member="serviceAccount:${PIPELINE_SA}" \
   --role="roles/firebasehosting.admin" \
+  --condition=None --quiet
+
+echo "8. Granting Firebase Viewer (roles/firebase.viewer)..."
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:${PIPELINE_SA}" \
+  --role="roles/firebase.viewer" \
   --condition=None --quiet
 
 echo ""
