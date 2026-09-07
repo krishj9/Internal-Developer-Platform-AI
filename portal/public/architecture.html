@@ -696,6 +696,33 @@ attribute.environment=assertion.environment"</code></pre>
             </tbody>
           </table>
         </div>
+
+        <div class="glass-card" style="margin-top: 24px; border-left: 4px solid var(--accent-blue);">
+          <h3>Control Plane vs. Execution Plane: Workflow Dispatch & PAT Architecture</h3>
+          <p>
+            To uphold strict least privilege, the FastAPI control plane running on Cloud Run does not execute
+            Terraform or hold broad cloud administration privileges. Instead, it dispatches versioned GitHub Actions workflows:
+          </p>
+          <div class="grid-2" style="margin-top: 16px;">
+            <div>
+              <h4 style="color: var(--accent-blue); margin-bottom: 8px;">Why a Personal Access Token (PAT)?</h4>
+              <ul style="font-size: 0.875rem; color: var(--text-secondary); padding-left: 20px;">
+                <li><strong>On-Demand Workflow Dispatch</strong>: The GitHub REST API requires authentication to trigger <code>workflow_dispatch</code> events via <code>POST /repos/{owner}/{repo}/actions/workflows/{workflow}/dispatches</code>.</li>
+                <li><strong>Fine-Grained Least Privilege</strong>: The token is strictly scoped to a single repository with <code>Actions: Read and write</code> permission only, preventing repository mutation.</li>
+                <li><strong>Secure Secret Storage</strong>: The PAT is stored in Google Secret Manager under <code>idp-github-dispatch-token</code> and ingested into memory on container startup by <code>idp-api-runtime</code>. Zero plain-text tokens in code or Git.</li>
+                <li><strong>Fail-Fast Verification</strong>: In production/Cloud Run mode, the API immediately halts and returns a descriptive error if the PAT is unconfigured or a placeholder.</li>
+              </ul>
+            </div>
+            <div>
+              <h4 style="color: var(--accent-emerald); margin-bottom: 8px;">Keyless Cloud Provisioning via WIF</h4>
+              <ul style="font-size: 0.875rem; color: var(--text-secondary); padding-left: 20px;">
+                <li><strong>Zero GCP Keys</strong>: While a GitHub PAT initiates the workflow, the workflow itself executes 100% keyless GCP authentication via OIDC + Workload Identity Federation (WIF).</li>
+                <li><strong>Scoped Pipeline Identities</strong>: Each template runs under an isolated service account (e.g., <code>idp-pipeline-t1-dev</code>) restricted to its specific state prefix and cloud resources.</li>
+                <li><strong>Cryptographic Callback Trust</strong>: On completion, GitHub Actions posts authenticated callbacks signed with Google OIDC ID tokens back to the control plane.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- SECTION 5: Control Plane Auth -->
@@ -716,76 +743,83 @@ attribute.environment=assertion.environment"</code></pre>
             </ul>
           </div>
           <div class="glass-card">
-            <h3>Signed JWT Bearer Tokens</h3>
-            <p>Upon login via <code>POST /auth/login</code>, a cryptographically signed, time-bounded JWT is issued:</p>
+            <h3>Signed JWT Bearer Sessions</h3>
+            <p>Access tokens are stateless, cryptographically signed, and bounded to a strict 60-minute window:</p>
             <ul>
-              <li>Signing Secret: Google Secret Manager (<code>idp-jwt-signing-key</code>)</li>
-              <li>Token Version Revocation: Global or per-user revocation via <code>token_version</code> increment</li>
-              <li>Browser Persistence: Stored in <code>localStorage</code>, cleared on 401</li>
+              <li>Algorithm: HMAC-SHA256 (key in Secret Manager)</li>
+              <li>Expiration: Exactly 60 minutes (3,600s)</li>
+              <li>Revocation: <code>token_version</code> counter in Firestore</li>
+              <li>Tenant Scope: Authorized <code>workspaces</code> claim</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <!-- SECTION 6: Pipeline Callback Trust Boundary -->
-      <section id="pipeline-trust">
-        <h2>6. Pipeline Callback Trust Boundary</h2>
+      <!-- SECTION 6: Firestore Domain Model -->
+      <section id="domain-model">
+        <h2>6. Firestore Domain Model & Idempotency</h2>
         <p>
-          The callback receiver (<code>POST /callbacks/pipeline</code>) is a zero-trust endpoint that validates
-          execution authenticity:
+          The control plane maintains auditability, idempotency, and concurrency controls through specialized Firestore
+          collections:
         </p>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Validation Layer</th>
-                <th>Mechanism</th>
-                <th>Protection</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Identity Token</strong></td>
-                <td>Google OIDC ID Token issued by <code>accounts.google.com</code></td>
-                <td>Rejects spoofed HTTP calls and human user JWTs.</td>
-              </tr>
-              <tr>
-                <td><strong>Context Binding</strong></td>
-                <td>Matching <code>request_id</code>, <code>deployment_id</code>, <code>template_id</code>,
-                  <code>commit_sha</code></td>
-                <td>Prevents pipeline updates from mutating unrelated workloads.</td>
-              </tr>
-              <tr>
-                <td><strong>Monotonic Sequence</strong></td>
-                <td>Sequential counter checks: 1 (PLANNING) &lt; 2 (APPLYING) &lt; 3 (SUCCEEDED)</td>
-                <td>Rejects out-of-order, delayed, or stale pipeline callbacks.</td>
-              </tr>
-              <tr>
-                <td><strong>Replay Tolerance</strong></td>
-                <td>Idempotent duplicate check on identical status</td>
-                <td>Safe handling of network retries without double-execution.</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="grid-3">
+          <div class="glass-card">
+            <h3>Deployments Ledger</h3>
+            <p>Atomic locking prevents concurrent operations on the same target workload:</p>
+            <pre><code>deployments/{deployment_id} {
+  deployment_id: "dep-xxx",
+  workspace: "ws-dev",
+  template_id: "t1-agent-engine",
+  status: "ACTIVE",
+  active_request_id: null,
+  safe_outputs: {
+    runtime_sa_email: "...",
+    staging_bucket: "...",
+    tool_secret_id: "..."
+  }
+}</code></pre>
+          </div>
+
+          <div class="glass-card">
+            <h3>Requests State Machine</h3>
+            <p>Immutable request history tracking state transitions and parameters:</p>
+            <pre><code>requests/{request_id} {
+  request_id: "req-xxx",
+  deployment_id: "dep-xxx",
+  status: "APPLYING",
+  actor_user_id: "usr-alice",
+  safe_input_digest: "sha256...",
+  created_at: timestamp
+}</code></pre>
+          </div>
+
+          <div class="glass-card">
+            <h3>24-Hour Idempotency</h3>
+            <p>Deterministic SHA-256 payload hashing prevents duplicate execution on retry:</p>
+            <pre><code>idempotency_records/{key} {
+  idempotency_key: "...",
+  payload_hash: "sha256...",
+  status: "COMPLETED",
+  response_snapshot: {...},
+  expires_at: timestamp (+24h)
+}</code></pre>
+          </div>
         </div>
       </section>
 
-      <!-- SECTION 7: State Machines & Locking -->
+      <!-- SECTION 7: State Progression -->
       <section id="state-machine">
-        <h2>7. State Machines & Concurrency Model</h2>
-        <p>
-          The platform maintains dual coordinated state machines for asynchronous requests and active deployments:
-        </p>
-
+        <h2>7. State Progression & Lifecycle Transitions</h2>
+        <p>Strict state machines govern both requests and deployments, preventing illegal transitions:</p>
         <div class="grid-2">
           <div class="glass-card">
             <h3>Request State Progression</h3>
-            <code>PENDING → DISPATCHED → PLANNING → APPLYING → SUCCEEDED | FAILED | CANCELLED</code>
+            <code>PENDING → DISPATCHED → PLANNING → APPLYING → SUCCEEDED | FAILED</code>
             <p style="margin-top: 12px;">
-              Requests represent the point-in-time asynchronous command submitted by an authorized developer or platform
-              admin.
+              Transitions occur deterministically as GitHub Actions posts OIDC-authenticated callbacks back to the API.
             </p>
           </div>
+
           <div class="glass-card">
             <h3>Deployment State Progression</h3>
             <code>PENDING → PROVISIONING → ACTIVE → DESTROYING → DESTROYED | FAILED</code>
@@ -801,13 +835,17 @@ attribute.environment=assertion.environment"</code></pre>
       <section id="templates">
         <h2>8. Governed AI Workload Templates</h2>
         <div class="grid-4">
-          <div class="glass-card">
-            <span class="badge badge-blue">T1 Template</span>
+          <div class="glass-card" style="border-top: 3px solid var(--accent-blue);">
+            <span class="badge badge-blue">T1 Template (Elevated)</span>
             <h3>Vertex AI Agent Engine</h3>
-            <p>ADK-based autonomous agent packaging deployed to managed Vertex AI Agent Engine reasoning instances.</p>
-            <div style="font-size:0.8rem; color:var(--text-muted);">
-              • Models: Gemini 2.5 Flash/Pro<br>
-              • Readiness: Query Ping Smoke Test
+            <p>Enterprise ADK agent platform provisioned on Vertex AI Agent Engine with full operational infrastructure.</p>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top: 8px;">
+              • <strong>Models</strong>: Gemini 2.5 Flash / Pro<br>
+              • <strong>Staging Store</strong>: Versioned GCS bucket with 30-day lifecycle expiration<br>
+              • <strong>Tool Secrets</strong>: Secret Manager tool secret with runtime SA binding<br>
+              • <strong>Observability</strong>: Cloud Monitoring alert policy & log metric filter<br>
+              • <strong>Testing</strong>: Interactive Agent Playground & Live Ping Smoke Test<br>
+              • <strong>Safe Outputs</strong>: Exposes resource IDs, bucket URI, secret ID, and alert ID
             </div>
           </div>
 

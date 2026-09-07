@@ -39,10 +39,16 @@ Authentication credentials are provisioned out-of-band by Platform Operations an
 
 Navigate to **Template Catalog** in the top navigation bar. You will find four pre-approved, version-pinned, immutable templates:
 
-1. **T1: Agent on Vertex AI Agent Engine (`t1-agent-engine`)**
-   - *Description*: Governed ADK-compliant reasoning agent deployed to Google Cloud Agent Engine.
+1. **T1: Agent on Vertex AI Agent Engine (`t1-agent-engine`) — Enterprise Elevated**
+   - *Description*: Governed enterprise-grade ADK reasoning agent platform deployed to Google Cloud Vertex AI Agent Engine.
+   - *Infrastructure Provisioned*:
+     - **Dedicated Runtime Identity**: Least-privilege service account (`sa-t1-{deployment_id}`) with Vertex AI user permissions.
+     - **Dedicated Staging & Artifact Bucket**: Versioned Cloud Storage bucket (`idp-agent-staging-{deployment_id}`) with an automated 30-day lifecycle expiration rule.
+     - **Tool Secret Store**: Dedicated Google Secret Manager secret (`sa-t1-{deployment_id}-tool-secret`) with IAM secret accessor granted to the agent runtime.
+     - **Cloud Monitoring Alert Policy**: Automated metric threshold alert (`idp-t1-{deployment_id}-error-rate`) logging reasoning engine errors.
    - *Supported Models*: `gemini-2.5-flash`, `gemini-2.5-pro`
    - *Cost Tier*: Low
+   - *Interactive Testing*: Native **Agent Playground** support in the portal.
 2. **T2: Vertex AI Managed RAG Engine (`t2-managed-rag`)**
    - *Description*: Managed RAG Engine corpus with vector index and bounded document ingestion ($\le 100$ files, $\le 500$ MB).
    - *Supported Models*: `text-embedding-004`, `text-embedding-005`
@@ -57,7 +63,17 @@ Navigate to **Template Catalog** in the top navigation bar. You will find four p
 
 ---
 
-### 3.2 Provisioning a Workload
+### 3.2 Workspaces and Context Switching
+
+In the top right navigation bar, the **`WORKSPACE`** selector defines your active security, tenancy, and state boundary:
+- **Tenant Scope**: Pre-populates all deployment requests with your active workspace (e.g., `ws-dev`, `default`, `admin`).
+- **RBAC Enforcement**: The FastAPI control plane verifies your user identity against the target workspace; non-admin users attempting cross-tenant provisioning are rejected with `403 Forbidden`.
+- **Terraform State Isolation**: Scopes the GCS remote state storage key (`idp-tfstate-{project}/workspaces/{workspace}/deployments/...`), preventing state collisions between teams.
+- **View Filter**: The **Deployments** tab automatically filters workloads to display only those belonging to your selected workspace.
+
+---
+
+### 3.3 Provisioning a Workload & GitHub Dispatch
 
 1. Click **"Configure & Deploy"** on any template card (e.g., **Agent on Vertex AI Agent Engine**).
 2. Complete the modal form:
@@ -66,11 +82,15 @@ Navigate to **Template Catalog** in the top navigation bar. You will find four p
    - **Governed Model**: Choose from the approved model dropdown (e.g., `gemini-2.5-flash`).
    - **GCP Region**: Target region (e.g., `us-central1`).
 3. Click **"Submit Provisioning Request"**.
-4. The control plane validates policies, checks for deployment locks, verifies idempotency, writes the audit log, and redirects you to the **Request Tracker**.
+4. The control plane validates policies, checks for deployment locks, verifies idempotency, writes the audit log, and dispatches the workflow.
+
+> [!NOTE]
+> **Why a GitHub PAT is Used for Workflow Dispatch**:
+> The FastAPI control plane running on Cloud Run is strictly isolated from infrastructure execution—it holds no direct broad Terraform permissions. Instead, it dispatches versioned GitHub Actions workflows via the GitHub REST API using a fine-grained Personal Access Token (PAT) stored in Google Secret Manager (`idp-github-dispatch-token`). Once triggered, GitHub Actions executes 100% keyless provisioning on GCP using Workload Identity Federation (WIF).
 
 ---
 
-### 3.3 Request Lifecycle Tracker
+### 3.4 Request Lifecycle Tracker
 
 The tracker displays live execution telemetry through an interactive stage timeline:
 
@@ -81,35 +101,41 @@ The tracker displays live execution telemetry through an interactive stage timel
 - **PENDING**: Request record created, atomic deployment lock acquired.
 - **DISPATCHED**: GitHub Actions workflow triggered via fine-grained credentials.
 - **PLANNING**: Terraform plan generated and validated against remote state in Cloud Storage.
-- **APPLYING**: Terraform apply executed; workload runtime service accounts and cloud resources provisioned.
+- **APPLYING**: Terraform apply executed; workload runtime service accounts, staging buckets, secrets, and alert policies provisioned.
 - **SUCCEEDED**: Pre-activation readiness smoke test verified; deployment transitioned to `ACTIVE`; deployment lock released.
 - **FAILED**: If any stage fails, the request transitions to `FAILED` with a sanitized failure class (e.g. `readiness_failed`, `terraform_apply_failed`) and lock is safely released.
 
 ---
 
-### 3.4 Managing Deployments & Inspecting Safe Outputs
+### 3.5 Managing Deployments, Safe Outputs & Agent Playground
 
-Navigate to the **Deployments** tab to view workloads in your active workspace.
+Navigate to the **Deployments** tab to view active workloads in your selected workspace.
 
-#### Inspecting Safe Workload Configuration:
-1. Click the **Outputs** (`Code` icon) button on any active deployment.
-2. The modal displays only safe, non-sensitive operational metadata:
-   - `deployment_id`: Unique identifier (e.g., `dep-bdba18c9`)
-   - `runtime_sa_email`: Workload service account (e.g., `sa-t1-depbdba18c9@mybrightday-dev.iam.gserviceaccount.com`)
-   - `model_name`: Configured foundation model (e.g., `gemini-2.5-flash`)
-   - `region`: Cloud deployment region (e.g., `us-central1`)
-   - `status`: `PROVISIONED`
+#### 1. Interactive Agent Playground:
+Click the **Playground** (`Play` / `Terminal` icon) button on any active T1 deployment:
+- Send interactive reasoning queries directly to the provisioned agent.
+- Inspect the live reasoning response, model metadata, execution latency, and Model Armor safety evaluation.
+
+#### 2. Inspecting Safe Operational Configuration:
+Click the **Outputs** (`Code` icon) button on any active deployment to view sanitized operational metadata:
+- `deployment_id`: Unique identifier (e.g., `dep-bdba18c9`)
+- `runtime_sa_email`: Dedicated service account (e.g., `sa-t1-depbdba18c9@mybrightday-dev.iam.gserviceaccount.com`)
+- `staging_bucket`: GCS bucket for agent artifacts (`idp-agent-staging-depbdba18c9`)
+- `tool_secret_id`: Secret Manager secret for tool credentials
+- `alert_policy_id`: Cloud Monitoring alert policy for error rate tracking
+- `model_name`: Configured foundation model (e.g., `gemini-2.5-flash`)
+- `region`: Cloud deployment region (e.g., `us-central1`)
+- `status`: `PROVISIONED`
 
 > [!IMPORTANT]
-> The platform adheres to strict data-masking rules: **Zero credentials, secrets, bearer tokens, or raw Terraform state files are ever returned to the client.**
+> The platform adheres to strict data-masking rules: **Zero credentials, secret values, bearer tokens, or raw Terraform state files are ever returned to the client.**
 
-#### Safe Two-Step Workload Destruction:
+#### 3. Safe Two-Step Workload Destruction:
 1. Click the red **Destroy** (`Trash2` icon) button on the target deployment row.
 2. In the confirmation dialog, type the exact **Deployment ID** to confirm.
 3. Click **"Permanently Destroy"**.
-4. The system acquires the teardown lock, sets status to `DESTROYING`, and executes `terraform destroy` via GitHub Actions.
+4. The system acquires the teardown lock, sets status to `DESTROYING`, and executes `terraform destroy` via GitHub Actions to cleanly tear down the Reasoning Engine, staging bucket, secrets, and alert policies.
 5. Once complete, the deployment status permanently transitions to `DESTROYED`.
-6. Any subsequent attempt to destroy an already-destroyed deployment is rejected with `HTTP 422 Unprocessable Content`.
 
 ---
 

@@ -13,19 +13,19 @@ A secure, repeatable, self-service Internal Developer Platform (IDP) control pla
 
 ## 🚀 Key Platform Features
 
-- **Control Plane Architecture**: Asynchronous FastAPI control plane running on Cloud Run backed by Firestore Native mode.
-- **Zero Static Service Account Keys**: 100% keyless machine authentication via GitHub Actions OIDC + GCP Workload Identity Federation (WIF).
-- **Argon2id + Signed JWTs**: Secure user authentication with `token_version` revocation.
+- **Control Plane vs. Execution Plane**: Asynchronous FastAPI control plane on Cloud Run backed by Firestore Native mode. The API holds zero broad cloud admin permissions, dispatching versioned GitHub Actions workflows via fine-grained Personal Access Tokens (PAT) loaded securely from Google Secret Manager.
+- **Zero Static Service Account Keys**: 100% keyless machine provisioning via GitHub Actions OIDC + GCP Workload Identity Federation (WIF).
+- **Argon2id + Signed JWTs**: Secure user authentication with `token_version` revocation and multi-tenant workspace isolation.
 - **24-Hour TTL Idempotency**: SHA-256 payload digest verification preventing duplicate or conflicting provisioning requests.
 - **Atomic Deployment Locking**: Concurrency safety preventing simultaneous mutations or premature teardowns.
-- **Parameter-Bound Pipeline Callbacks**: Strict OIDC ID token validation, monotonic sequence counters, and parameter context binding.
+- **Parameter-Bound Pipeline Callbacks**: Strict Google OIDC ID token validation, monotonic sequence counters, and parameter context binding.
 - **Governed AI Templates**:
-  - **T1: Vertex AI Agent Engine**: Immutable ADK agent packaging with pre-activation smoke test verification.
+  - **T1: Vertex AI Agent Engine (Enterprise Platform)**: Complete governed ecosystem including dedicated runtime identity, versioned GCS artifact staging bucket (30-day lifecycle auto-expiry), Secret Manager tool store, Cloud Monitoring alert policy, pre-activation smoke test verification, and interactive Agent Playground.
   - **T2: Managed Vertex AI RAG Engine**: Managed corpus creation with bounded document ingestion and retrieval validation.
   - **T3: Cloud Run Agent Service**: Containerized FastAPI + ADK agent runtime with private IAM invocation and horizontal auto-scaling.
   - **T4: Model Armor & Governance Controls**: Prompt injection defense, PII redactions (SSN/CC/Email), Cloud Monitoring alert policies, and automated TTL cleanup.
 - **Production Approval Gate**: GitHub Environment review enforcement before production Terraform execution.
-- **React Developer Portal**: Modern, cybernetic dark-themed UI for template discovery, request tracking, deployment management, and Model Armor inspection.
+- **React Developer Portal**: Modern, cybernetic dark-themed UI deployed to Firebase Hosting (`idp4gcp.web.app`) for template discovery, request tracking, deployment management, Model Armor inspection, and interactive Agent Playground.
 - **IDP CLI**: Lightweight terminal client mirroring portal capabilities.
 
 ---
