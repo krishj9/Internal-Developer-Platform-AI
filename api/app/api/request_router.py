@@ -184,12 +184,17 @@ async def create_request(
         "owner": current_user.username,
         **input_data.inputs,
     }
+    # Ensure commit SHA resolves to 'main' if it's the dummy seed SHA or empty
+    resolved_commit_sha = template.template_commit_sha
+    if not resolved_commit_sha or resolved_commit_sha == "010078cf6745f44da605f6fa0768b4f177c385a5":
+        resolved_commit_sha = "main"
+
     dispatch_inputs = {
         "request_id": request_id,
         "deployment_id": deployment_id,
         "template_id": template.template_id,
         "template_version": template.template_version,
-        "template_commit_sha": template.template_commit_sha,
+        "template_commit_sha": resolved_commit_sha,
         "operation": "create",
         "workspace": input_data.workspace,
         "environment": input_data.environment,
@@ -202,7 +207,7 @@ async def create_request(
     try:
         await dispatcher.dispatch_workflow(
             workflow_id=workflow_file,
-            ref=template.template_commit_sha,
+            ref=resolved_commit_sha,
             inputs=dispatch_inputs,
         )
     except GitHubDispatchError as e:

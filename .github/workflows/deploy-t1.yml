@@ -62,7 +62,7 @@ jobs:
       - name: Checkout Immutable Template Release
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.template_commit_sha }}
+          ref: ${{ (github.event.inputs.template_commit_sha != '' && github.event.inputs.template_commit_sha != '010078cf6745f44da605f6fa0768b4f177c385a5') && github.event.inputs.template_commit_sha || 'main' }}
 
       - name: Authenticate to GCP via WIF
         id: gcp_auth
@@ -108,7 +108,7 @@ jobs:
       - name: Checkout Immutable Template Release
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.template_commit_sha }}
+          ref: ${{ (github.event.inputs.template_commit_sha != '' && github.event.inputs.template_commit_sha != '010078cf6745f44da605f6fa0768b4f177c385a5') && github.event.inputs.template_commit_sha || 'main' }}
 
       - name: Authenticate to GCP via WIF
         id: gcp_auth

@@ -49,14 +49,18 @@ class GitHubDispatchService:
         Trigger a workflow dispatch event on GitHub Actions.
         """
         tok = self.token
-        # In dev environment without live GitHub token or with placeholder token, simulate dispatch
-        if settings.ENVIRONMENT == "dev" and (
+        # In local unit test/dev environment without Secret Manager, simulate dispatch
+        if settings.ENVIRONMENT == "dev" and not settings.USE_SECRET_MANAGER and (
             not tok or "placeholder" in tok or "dev-insecure" in tok
         ):
             return
 
-        if not tok or "placeholder" in tok:
-            raise GitHubDispatchError("Valid GitHub dispatch token is not configured.")
+        if not tok or "placeholder" in tok or "dev-insecure" in tok:
+            raise GitHubDispatchError(
+                "Valid GitHub dispatch token is not configured in Google Secret Manager "
+                "('idp-github-dispatch-token'). Please configure a GitHub Personal "
+                "Access Token (PAT) with Actions write permission."
+            )
 
         url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}"
