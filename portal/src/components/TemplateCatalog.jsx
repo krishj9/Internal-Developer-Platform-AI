@@ -30,9 +30,25 @@ export default function TemplateCatalog({ onSelectTemplate }) {
   };
 
   const getTierBadge = (tier) => {
-    if (tier === 'low') return <span className="badge badge-active">Tier: Low Cost</span>;
-    if (tier === 'high') return <span className="badge badge-failed">Tier: High Cost</span>;
-    return <span className="badge badge-pending">Tier: Medium Cost</span>;
+    if (tier === 'low') {
+      return (
+        <span className="badge badge-active" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
+          Low Cost
+        </span>
+      );
+    }
+    if (tier === 'high') {
+      return (
+        <span className="badge badge-failed" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
+          High Cost
+        </span>
+      );
+    }
+    return (
+      <span className="badge badge-pending" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
+        Medium Cost
+      </span>
+    );
   };
 
   if (loading) {
@@ -65,13 +81,13 @@ export default function TemplateCatalog({ onSelectTemplate }) {
           return (
             <div key={tpl.template_id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60a5fa' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                    <div style={{ width: '42px', height: '42px', minWidth: '42px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60a5fa', flexShrink: 0 }}>
                       <Icon size={22} />
                     </div>
-                    <div>
-                      <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, wordBreak: 'break-word' }}>
                         {tpl.display_name}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
