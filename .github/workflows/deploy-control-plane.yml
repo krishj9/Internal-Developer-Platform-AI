@@ -86,8 +86,8 @@ jobs:
       - name: Verify Cloud Run API Health
         run: |
           API_URL=$(cat api_url.txt)
-          echo "Testing healthz endpoint at ${API_URL}/healthz..."
-          curl -f -s --retry 5 --retry-delay 5 "${API_URL}/healthz"
+          echo "Testing health endpoint at ${API_URL}/health..."
+          curl -f -s --retry 5 --retry-delay 5 "${API_URL}/health"
           echo "Health check passed!"
 
   deploy-portal:

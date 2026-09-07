@@ -45,6 +45,7 @@ class QueryResponse(BaseModel):
     runtime: str
 
 
+@app.get("/health")
 @app.get("/healthz")
 async def healthz():
     """Liveness/readiness health check probe."""

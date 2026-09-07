@@ -171,7 +171,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Health check endpoint
+    # Health check endpoints (/health for public Cloud Run; /healthz for internal/tests)
+    @app.get("/health", tags=["Health"], summary="Health check")
     @app.get("/healthz", tags=["Health"], summary="Health check")
     async def healthz():
         return {

@@ -52,11 +52,13 @@ async def seed_test_users():
 async def test_healthz_endpoint():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/healthz")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "healthy"
-        assert "IDP Control Plane API" in data["app"]
+        # Test both /health (Cloud Run public) and /healthz (internal standard)
+        for endpoint in ["/health", "/healthz"]:
+            response = await client.get(endpoint)
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "healthy"
+            assert "IDP Control Plane API" in data["app"]
 
 
 @pytest.mark.asyncio
