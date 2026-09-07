@@ -2,39 +2,24 @@
 Unit tests for the Math Reasoning Agent application workload.
 """
 
-import importlib.util
 import sys
 from pathlib import Path
 
 import pytest
 
-_workload_dir = Path(__file__).parent.parent
-if str(_workload_dir) not in sys.path:
-    sys.path.insert(0, str(_workload_dir))
+_workload_dir = str(Path(__file__).parent.parent.resolve())
+if _workload_dir not in sys.path:
+    sys.path.insert(0, _workload_dir)
 
-
-def _load_module(mod_name: str, file_path: Path):
-    spec = importlib.util.spec_from_file_location(mod_name, file_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module specification from {file_path}")
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[mod_name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-tools_mod = _load_module("math_tools_mod", _workload_dir / "math_tools.py")
-agent_mod = _load_module("math_agent_mod", _workload_dir / "math_agent.py")
-deploy_mod = _load_module("math_deploy_mod", _workload_dir / "deploy.py")
-
-add = tools_mod.add
-subtract = tools_mod.subtract
-multiply = tools_mod.multiply
-divide = tools_mod.divide
-MATH_TOOL_REGISTRY = tools_mod.MATH_TOOL_REGISTRY
-MathReasoningAgent = agent_mod.MathReasoningAgent
-create_agent = agent_mod.create_agent
-deploy_to_vertex_ai = deploy_mod.deploy_to_vertex_ai
+from deploy import deploy_to_vertex_ai
+from math_agent import MathReasoningAgent, create_agent
+from math_tools import (
+    MATH_TOOL_REGISTRY,
+    add,
+    divide,
+    multiply,
+    subtract,
+)
 
 
 def test_direct_arithmetic_tools():

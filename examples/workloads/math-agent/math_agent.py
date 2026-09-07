@@ -17,10 +17,7 @@ _current_dir = str(Path(__file__).parent.resolve())
 if _current_dir not in sys.path:
     sys.path.insert(0, _current_dir)
 
-try:
-    from math_tools import MATH_TOOL_REGISTRY, MATH_TOOLS_LIST, add, divide, multiply, subtract
-except ImportError:
-    from .math_tools import MATH_TOOL_REGISTRY, MATH_TOOLS_LIST, add, divide, multiply, subtract
+from math_tools import MATH_TOOL_REGISTRY, MATH_TOOLS_LIST, add, divide, multiply, subtract
 
 
 class MathReasoningAgent:

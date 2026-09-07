@@ -18,10 +18,7 @@ _current_dir = str(Path(__file__).parent.resolve())
 if _current_dir not in sys.path:
     sys.path.insert(0, _current_dir)
 
-try:
-    from math_agent import MathReasoningAgent
-except ImportError:
-    from .math_agent import MathReasoningAgent
+from math_agent import MathReasoningAgent
 
 
 def load_config(config_path: str) -> dict:

@@ -38,7 +38,7 @@ include = ["api*", "cli*"]
 minversion = "8.0"
 testpaths = ["api/tests", "templates", "cli/tests", "examples/workloads/math-agent/tests"]
 python_files = ["test_*.py"]
-pythonpath = ["."]
+pythonpath = [".", "examples/workloads/math-agent"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
