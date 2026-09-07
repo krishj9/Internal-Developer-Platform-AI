@@ -106,9 +106,15 @@ pytest -v
 
 ---
 
-## 📖 Documentation & Runbooks
+## 📖 Documentation & Architecture
 
-- [Architecture Overview](docs/architecture.md)
+### 🏛️ Interactive Specifications & Slide Decks (Rendered HTML)
+- 🌐 **[Interactive Architecture Reference (Rendered HTML)](https://idp4gcp.web.app/architecture.html)** — High-fidelity cybernetic architecture reference with interactive navigation, SVG diagrams, and Model Armor flows.
+- 📊 **[Executive Presentation Slide Deck (Rendered HTML)](https://idp4gcp.web.app/presentation.html)** — Standalone executive presentation deck covering platform vision, governance boundaries, and template specifications.
+- 📑 **[Demo Capabilities Guide (PDF)](docs/demo_capabilities_guide.pdf)** — End-to-end walkthrough and visual capabilities guide compiled from automated portal navigation and pipeline execution.
+
+### 📄 Markdown Specifications & Runbooks
+- [Architecture Overview (Markdown)](docs/architecture.md)
 - [Security Model & Trust Boundaries](docs/security-model.md)
 - [REST API Contract](docs/api-contract.md)
 - [Platform Bootstrap Runbook](docs/runbooks/bootstrap.md)

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Layers, Server, Activity, ShieldCheck, LogOut, Terminal, BookOpen, ExternalLink } from 'lucide-react';
+import { Layers, Server, Activity, ShieldCheck, LogOut, Terminal, BookOpen, ExternalLink, Presentation } from 'lucide-react';
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const { user, activeWorkspace, switchWorkspace, logout, isAdmin } = useAuth();
@@ -67,30 +67,56 @@ export default function Navbar({ activeTab, setActiveTab }) {
 
       {/* Right Controls: Architecture Link, Workspace & Profile */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        {/* Architecture Document Link */}
-        <a
-          id="nav-link-architecture"
-          href="/architecture.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-secondary"
-          style={{
-            padding: '6px 12px',
-            fontSize: '0.8rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            border: '1px solid rgba(59, 130, 246, 0.35)',
-            background: 'rgba(59, 130, 246, 0.1)',
-            color: '#93c5fd',
-            textDecoration: 'none',
-          }}
-          title="Open Technical Architecture Document"
-        >
-          <BookOpen size={14} color="#60a5fa" />
-          <span>Architecture.html</span>
-          <ExternalLink size={12} style={{ opacity: 0.6 }} />
-        </a>
+        {/* Architecture & Presentation Links */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <a
+            id="nav-link-architecture"
+            href="/architecture.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              border: '1px solid rgba(59, 130, 246, 0.35)',
+              background: 'rgba(59, 130, 246, 0.1)',
+              color: '#93c5fd',
+              textDecoration: 'none',
+            }}
+            title="Open Technical Architecture Document"
+          >
+            <BookOpen size={14} color="#60a5fa" />
+            <span>Architecture</span>
+            <ExternalLink size={12} style={{ opacity: 0.6 }} />
+          </a>
+
+          <a
+            id="nav-link-presentation"
+            href="/presentation.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              border: '1px solid rgba(139, 92, 246, 0.35)',
+              background: 'rgba(139, 92, 246, 0.1)',
+              color: '#c4b5fd',
+              textDecoration: 'none',
+            }}
+            title="Open Executive Presentation Deck"
+          >
+            <Presentation size={14} color="#a78bfa" />
+            <span>Presentation</span>
+            <ExternalLink size={12} style={{ opacity: 0.6 }} />
+          </a>
+        </div>
 
         {/* Workspace Selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(15, 23, 42, 0.6)', padding: '4px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>

@@ -87,3 +87,5 @@ Thumbs.db
 temp-prompts/
 tmp/
 scratch/
+idp-config.json
+generated/
