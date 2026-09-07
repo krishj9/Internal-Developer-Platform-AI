@@ -56,7 +56,7 @@ class Settings(BaseSettings):
         "idp-github-pool/providers/idp-github-provider"
     )
     PIPELINE_SA_EMAIL: str = "idp-pipeline-t1-dev@mybrightday-dev.iam.gserviceaccount.com"
-    API_BASE_URL: str = "https://idp-api-754915077075.us-central1.run.app"
+    API_BASE_URL: str = "https://idp-api-gzjrpc7vzq-uc.a.run.app"
 
     # Cloud Controls
     USE_SECRET_MANAGER: bool = False

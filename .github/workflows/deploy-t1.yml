@@ -176,6 +176,12 @@ jobs:
             --project-id "mybrightday-dev" \
             --region "us-central1" || true
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+          terraform_wrapper: false
+
       - name: Execute Terraform Lifecycle
         id: terraform
         uses: ./.github/actions/terraform-lifecycle

@@ -16,7 +16,7 @@ inputs:
 outputs:
   id_token:
     description: "Minted Google ID token (if id_token_audience was provided)"
-    value: ${{ steps.auth.outputs.id_token }}
+    value: ${{ steps.auth_id.outputs.id_token }}
 
 runs:
   using: "composite"
@@ -27,6 +27,16 @@ runs:
       with:
         workload_identity_provider: ${{ inputs.workload_identity_provider }}
         service_account: ${{ inputs.service_account }}
+        create_credentials_file: true
+        token_format: "access_token"
+
+    - name: Mint ID Token for Callback
+      id: auth_id
+      if: inputs.id_token_audience != ''
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.workload_identity_provider }}
+        service_account: ${{ inputs.service_account }}
+        token_format: "id_token"
         id_token_audience: ${{ inputs.id_token_audience }}
         id_token_include_email: true
-        token_format: "access_token"

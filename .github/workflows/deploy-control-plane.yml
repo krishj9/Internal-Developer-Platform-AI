@@ -73,7 +73,7 @@ jobs:
             --region ${{ env.GCP_REGION }} \
             --service-account ${{ env.RUNTIME_SA }} \
             --allow-unauthenticated \
-            --set-env-vars PROJECT_ID=${{ env.GCP_PROJECT }},ENVIRONMENT=dev,USE_FIRESTORE=true,FIRESTORE_DATABASE=idp-db,USE_SECRET_MANAGER=true \
+            --set-env-vars PROJECT_ID=${{ env.GCP_PROJECT }},ENVIRONMENT=dev,USE_FIRESTORE=true,FIRESTORE_DATABASE=idp-db,USE_SECRET_MANAGER=true,API_BASE_URL=https://idp-api-754915077075.us-central1.run.app \
             --format="value(status.url)" > api_url.txt
 
       - name: Capture Deployed Service URL

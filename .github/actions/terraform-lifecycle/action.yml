@@ -27,6 +27,12 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.9.0"
+        terraform_wrapper: false
+
     - name: Configure GCS Backend
       shell: bash
       working-directory: ${{ inputs.working_directory }}
